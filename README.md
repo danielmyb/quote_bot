@@ -1,2 +1,2 @@
-# quote_bot
+# reminder_bot
 Python Telegram bot
