@@ -1,5 +1,8 @@
 {
-  "event_checker": {
-    "interval": 300
-  }
+  "configuration_values": {
+    "event_checker": {
+      "interval": 300
+    }
+  },
+  "version": "0.1.200826"
 }

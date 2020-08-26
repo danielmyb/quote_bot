@@ -6,17 +6,22 @@
 # Copyright: Daniel Bebber, 2020
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
+import time
+
 from control.database_controller import DatabaseController
 
 
 class EventChecker:
 
-    def __init__(self):
+    def __init__(self, updater):
         """Constructor."""
         self.interval = None
         self.user = None
 
-        self.interval = DatabaseController.configuration["event_checker"]["interval"]
+        self.updater = updater
+        self.interval = DatabaseController.configuration['configuration_values']['event_checker']['interval']
+
+        self.check_events()
 
     def check_events(self):
         """

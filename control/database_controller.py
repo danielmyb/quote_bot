@@ -23,7 +23,8 @@ class DatabaseController:
     configuration = {}
 
     def __init__(self):
-        DatabaseController.load_configuration()
+        """Constructor."""
+        DatabaseController.configuration = DatabaseController.load_configuration()
 
     @staticmethod
     def load_configuration():
@@ -32,31 +33,39 @@ class DatabaseController:
             dict: Loaded configuration.
         """
         if DatabaseController.configuration:
+            logger.info(DatabaseController.configuration)
             return DatabaseController.configuration
         with open(os.path.join(PROJECT_ROOT, "configuration.json")) as configuration_file:
-            return json.load(configuration_file)
+            json_content = json.load(configuration_file)
+            logger.info(json_content)
+            return json_content
 
-    def check_or_create_database(self, user_id):
+    @staticmethod
+    def load_user_entry(user_id):
         """
         Args:
-            user_id (int): Id of user.
-        Returns:
-            bool: True if new DB was created, False if not.
-        """
+            user_id (int): ID of user.
 
+        Returns:
+            dict: Data of the user as dict.
+        """
         user_id_string = "{}".format(user_id)
         userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
 
-        if os.path.isfile(userdata_path):
-            return False
-        with open(userdata_path, "w") as userdata_file:
-            userdata_file.write("{}")
-        return True
+        if not os.path.isfile(userdata_path):
+            with open(userdata_path, "w") as userdata_file:
+                user_dict = {"user_id": user_id}
+                json.dump(user_dict, userdata_file)
+
+        with open(userdata_path, "r") as userdata_file:
+            userdata = json.load(userdata_file)
+
+        return userdata
 
     def save_event_data(self, user_id, data):
         """
         Args:
-            user_id (int): Id of user.
+            user_id (int): ID of user.
             data (dict):
         Returns:
 
@@ -65,7 +74,7 @@ class DatabaseController:
     def load_event_data(self, user_id):
         """
         Args:
-            user_id (int): Id of user.
+            user_id (int): ID of user.
         Returns:
 
         """

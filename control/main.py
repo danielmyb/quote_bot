@@ -6,7 +6,6 @@
 # Copyright: Daniel Bebber, 2020
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
-import json
 import logging
 import os
 
@@ -14,6 +13,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Enable logging
 from control.database_controller import DatabaseController
+from control.event_checker import EventChecker
+from models.user import User
 from utils.path_utils import DATA_PATH
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,18 +29,15 @@ db_controller = DatabaseController()
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
-    update.message.reply_text('Hi!')
-    user = update.message.from_user
-    update.message.reply_text('Ich leg erstmal eine neue Datenbank für dich an {} ..'.format(user.first_name))
-    db_controller.load_event_data(user.id)
-    created = db_controller.check_or_create_database(user.id)
-    if not created:
-        update.message.reply_text('Oh! Anscheinend warst du schon mal hier - na dann nehmen wir doch was schon da ist.')
+    user = User(update.message.from_user)
+    update.message.reply_text('Hallo {}!'.format(user.telegram_user.first_name))
+    update.message.reply_text('Folgendes hab ich von dir: {}'.format(user.user_data))
 
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_markdown_v2('*YOU NEED SOME HELP?* \n'
+                                     'Gibs dann irgendwann undso')
 
 
 def echo(update, context):
@@ -78,10 +76,15 @@ def main():
     # Start the Bot
     updater.start_polling()
 
+    event_checker = EventChecker(updater)
+    event_checker.check_events()
+
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
+
 
 
 if __name__ == '__main__':
