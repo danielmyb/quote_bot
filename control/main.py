@@ -9,11 +9,12 @@
 import logging
 import os
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 # Enable logging
 from control.database_controller import DatabaseController
 from control.event_checker import EventChecker
+from control.event_handler import EventHandler
 from models.user import User
 from utils.path_utils import DATA_PATH
 
@@ -69,6 +70,8 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help_command))
+    dp.add_handler(CommandHandler("new_event", EventHandler.add_new_event))
+    dp.add_handler(CallbackQueryHandler(EventHandler.add_new_event_query_handler))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
@@ -83,8 +86,6 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
-
-
 
 
 if __name__ == '__main__':
