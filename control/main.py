@@ -7,16 +7,14 @@
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
 import logging
-import os
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-# Enable logging
+from control.bot_control import BotControl
 from control.database_controller import DatabaseController
 from control.event_checker import EventChecker
 from control.event_handler import EventHandler
 from models.user import User
-from utils.path_utils import DATA_PATH
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -48,23 +46,9 @@ def echo(update, context):
 
 def main():
     """Start the bot."""
-
-    token_file_path = os.path.join(DATA_PATH, ".token")
-    if not token_file_path:
-        raise RuntimeError("Token file {} was not found!".format(token_file_path))
-
-    with open(token_file_path) as token_file:
-        token = token_file.read()
-
-    if not token:
-        raise RuntimeError("Token in {} was empty".format(token_file_path))
-
-    # Create the Updater and pass it your bots token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
-    updater = Updater(token, use_context=True)
-
     # Get the dispatcher to register handlers
+    updater = BotControl.setup_bot()
+
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram

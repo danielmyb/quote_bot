@@ -29,10 +29,14 @@ class Event:
 
     @staticmethod
     def event_keyboard_type():
+        """
+        Returns:
+
+        """
         keyboard = [[InlineKeyboardButton("{}".format(EventType.REGULARLY.name),
-                                          callback_data="{}".format(EventType.REGULARLY))],
+                                          callback_data="{}".format(EventType.REGULARLY.value))],
                     [InlineKeyboardButton("{}".format(EventType.SINGLE.name),
-                                          callback_data="{}".format(EventType.SINGLE))]]
+                                          callback_data="{}".format(EventType.SINGLE.value))]]
         return InlineKeyboardMarkup(keyboard)
 
 
