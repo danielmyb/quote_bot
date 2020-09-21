@@ -10,6 +10,7 @@ import json
 import logging
 import os
 
+from models.day import DayEnum
 from utils.path_utils import USERDATA_PATH, PROJECT_ROOT
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -54,7 +55,9 @@ class DatabaseController:
 
         if not os.path.isfile(userdata_path):
             with open(userdata_path, "w") as userdata_file:
-                user_dict = {"user_id": user_id}
+                user_dict = {"user_id": user_id, "events": {}}
+                for day in DayEnum:
+                    user_dict["events"][day.value] = {}
                 json.dump(user_dict, userdata_file)
 
         with open(userdata_path, "r") as userdata_file:
