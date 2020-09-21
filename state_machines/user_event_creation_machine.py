@@ -13,27 +13,23 @@ class UserEventCreationMachine:
     state_dict = {}
 
     @staticmethod
-    def receive_state_of_user(user):
-        """
+    def receive_state_of_user(user_id):
+        """Receives the state the user is currently in. If there was no state saved the state is set to 0.
         Args:
-            user:
-
+            user_id (int): ID of the user
         Returns:
-
+            int: State the user is currently in.
         """
-        if not UserEventCreationMachine.state_dict or not UserEventCreationMachine.state_dict[user]:
-            UserEventCreationMachine.state_dict[user] = 0
-        return UserEventCreationMachine.state_dict[user]
+        if not UserEventCreationMachine.state_dict or not UserEventCreationMachine.state_dict[user_id]:
+            UserEventCreationMachine.state_dict[user_id] = 0
+        return UserEventCreationMachine.state_dict[user_id]
 
     @staticmethod
-    def set_state_of_user(user, state):
-        """
+    def set_state_of_user(user_id, state):
+        """Sets the state of the given user.
         Args:
-            user:
-            state:
-
-        Returns:
-
+            user_id (int): ID of the user.
+            state (int): State the user should be in.
         """
         # TODO: Add check for valid state
-        UserEventCreationMachine.state_dict[user] = state
+        UserEventCreationMachine.state_dict[user_id] = state
