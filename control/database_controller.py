@@ -57,7 +57,7 @@ class DatabaseController:
             with open(userdata_path, "w") as userdata_file:
                 user_dict = {"user_id": user_id, "events": {}}
                 for day in DayEnum:
-                    user_dict["events"][day.value] = {}
+                    user_dict["events"][day.value] = []
                 json.dump(user_dict, userdata_file)
 
         with open(userdata_path, "r") as userdata_file:
@@ -65,14 +65,24 @@ class DatabaseController:
 
         return userdata
 
-    def save_event_data(self, user_id, data):
-        """
+    @staticmethod
+    def save_day_event_data(user_id, day, event):
+        """Saves the event data of a given day of a given user into the database
         Args:
             user_id (int): ID of user.
-            data (dict):
-        Returns:
-
+            day (int): Day of the event.
+            event (Event): Event that should be saved.
         """
+        logger.info("%s %s %s", user_id, day, event)
+        userdata = DatabaseController.load_user_entry(user_id)
+
+        userdata["events"][day] += [{"title": event.name, "content": event.content, "event_type": event.event_type,
+                                     "ping_time": event.ping_time}]
+        user_id_string = "{}".format(user_id)
+        userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
+
+        with open(userdata_path, "w") as userdata_file:
+            json.dump(userdata, userdata_file)
 
     def load_event_data(self, user_id):
         """
@@ -81,3 +91,18 @@ class DatabaseController:
         Returns:
 
         """
+
+    @staticmethod
+    def load_all_events_from_all_users():
+        """Loads all saved events from all users.
+        Returns:
+            dict: Contains all events of all users.
+        """
+        userdata_files = os.listdir(USERDATA_PATH)
+        userdata = {}
+        for userdata_file in userdata_files:
+            with open(os.path.join(USERDATA_PATH, userdata_file), "r") as userdata_content:
+                content = json.load(userdata_content)
+                userdata["{}".format(content["user_id"])] = content["events"]
+
+        return userdata
