@@ -6,6 +6,7 @@
 # Copyright: Daniel Bebber, 2020
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
+from enum import Enum
 
 
 class UserEventCreationMachine:
@@ -33,3 +34,13 @@ class UserEventCreationMachine:
         """
         # TODO: Add check for valid state
         UserEventCreationMachine.state_dict[user_id] = state
+
+
+class ValidStates(Enum):
+    """Contains all valid states for the UserEventCreationMachine."""
+    DONE = -1
+    INITIAL = 0
+    STARTED = 1
+    DAY = 2
+    HOURS = 3
+    MINUTES = 4

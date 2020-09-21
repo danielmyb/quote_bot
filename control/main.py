@@ -15,6 +15,7 @@ from control.database_controller import DatabaseController
 from control.event_checker import EventChecker
 from control.event_handler import EventHandler
 from models.user import User
+from state_machines.user_event_creation_machine import UserEventCreationMachine
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -30,7 +31,6 @@ def start(update, context):
     """Send a message when the command /start is issued."""
     user = User(update.message.from_user)
     update.message.reply_text('Hallo {}!'.format(user.telegram_user.first_name))
-    update.message.reply_text('Folgendes hab ich von dir: {}'.format(user.user_data))
 
 
 def help_command(update, context):
@@ -42,8 +42,11 @@ def help_command(update, context):
 def echo(update, context):
     """Echo the user message."""
     user_id = User(update.message.from_user).telegram_user.id
-    if user_id in EventHandler.events_in_creation.keys():
-        EventHandler.add_new_event_title(update, context)
+    if UserEventCreationMachine.receive_state_of_user(user_id) == 1:
+        if user_id in EventHandler.events_in_creation.keys() and not EventHandler.events_in_creation[user_id]:
+            EventHandler.add_new_event_title(update, context)
+        elif EventHandler.events_in_creation[user_id]["title"]:
+            EventHandler.add_new_event_content(update, context)
     else:
         update.message.reply_text("Ähm hi ...?")
 
