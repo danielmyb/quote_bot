@@ -41,7 +41,11 @@ def help_command(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    update.message.reply_text("Eigentlich soll ich was besseres tun. Vielleicht irgendwann ja mal...")
+    user_id = User(update.message.from_user).telegram_user.id
+    if user_id in EventHandler.events_in_creation.keys():
+        EventHandler.add_new_event_title(update, context)
+    else:
+        update.message.reply_text("Ähm hi ...?")
 
 
 def main():

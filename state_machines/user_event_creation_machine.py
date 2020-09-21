@@ -21,7 +21,7 @@ class UserEventCreationMachine:
         Returns:
 
         """
-        if not UserEventCreationMachine.state_dict or UserEventCreationMachine.state_dict[user]:
+        if not UserEventCreationMachine.state_dict or not UserEventCreationMachine.state_dict[user]:
             UserEventCreationMachine.state_dict[user] = 0
         return UserEventCreationMachine.state_dict[user]
 
