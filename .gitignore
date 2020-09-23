@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # Database
-.data
+.data/user_data/*.json
+.data/.token
