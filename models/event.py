@@ -16,18 +16,23 @@ from models.day import DayEnum
 class Event:
     """Represents a single event."""
 
-    def __init__(self, name, content, event_type, ping_time):
+    def __init__(self, name, content, event_type, event_time, ping_times=None):
         """Constructor.
         Args:
-            name:
-            content:
-            event_type:
-            ping_time:
+            name (str): Name of the event.
+            content (str): Content of the event.
+            event_type (EventType): Type of the event, like singular.
+            event_time (str): Time when the event is happening.
+            ping_times (list of 'str'): Timeslots when the user should be pinged for that event.
         """
         self.name = name
         self.content = content
         self.event_type = event_type
-        self.ping_time = ping_time
+        self.event_time = event_time
+        if ping_times:
+            self.ping_times = ping_times
+        else:
+            self.ping_times = []
 
     @staticmethod
     def event_keyboard_type():

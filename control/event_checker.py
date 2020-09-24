@@ -14,6 +14,7 @@ from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
+from models.event import EventType
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -35,12 +36,30 @@ class EventChecker:
     def check_events(self):
         """Checks the events of all user regularly and pings them."""
         userdata = DatabaseController.load_all_events_from_all_users()
-        today = "{}".format(datetime.today().weekday())
-        for user_id in userdata:
-            events_of_today = userdata[user_id][today]
-            self._check_event_ping(user_id, events_of_today)
+        today = datetime.today().weekday()
+        self._ping_users(userdata, today)
+        self.removed_passed_single_events(userdata)
+
         time.sleep(self.interval)
+
+        # Check if a new day has begun
+        current_day = datetime.today().weekday()
+        if today != current_day:
+            # Use fresh userdata
+            userdata = DatabaseController.load_all_events_from_all_users()
+            self._ping_users(userdata, current_day)
         self.check_events()
+
+    def _ping_users(self, userdata, day):
+        """Pings all users inside userdata with the events of the given day
+        Args:
+            userdata (dict): Contains the data of all users.
+            day (int): Represents the day which should be pinged for.
+        """
+        day = "{}".format(day)
+        for user_id in userdata:
+            events_of_today = userdata[user_id][day]
+            self._check_event_ping(user_id, events_of_today)
 
     def _check_event_ping(self, user_id, events):
         """Check which events are not already passed and pings the user.
@@ -53,17 +72,25 @@ class EventChecker:
 
         ping_list = []
         for event in events:
-            event_hour, event_minute = event["ping_time"].split(":")
-            if int(event_hour) > current_time.hour or \
-                    (int(event_hour) == current_time.hour and int(event_minute) > current_time.minute):
-                logger.info("CT: %s | ET: %s", current_time, event["ping_time"])
+            if not self.check_event_passed(event):
                 ping_list.append(event)
 
+        # Only ping if there are events to notify about
         if ping_list:
             message = self.build_ping_message(ping_list)
             bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
 
-    def build_ping_message(self, events):
+    @staticmethod
+    def check_event_passed(event):
+        event_hour, event_minute = event["event_time"].split(":")
+        current_time = datetime.now()
+        if int(event_hour) > current_time.hour or (int(event_hour) == current_time.hour and
+                                                   int(event_minute) > current_time.minute):
+            return False
+        return True
+
+    @staticmethod
+    def build_ping_message(events):
         """Generates the ping message for the user.
         Args:
             events (list of 'dict'): Contains all events of a user for a given day that are not passed yet.
@@ -75,7 +102,7 @@ class EventChecker:
         for event in events:
             message += "*Event:* {}\n".format(event["title"])
             message += "*Inhalt:* {}\n".format(event["content"])
-            message += "*Start:* {}\n".format(event["ping_time"])
+            message += "*Start:* {}\n".format(event["event_time"])
             message += "\n"
 
         return message

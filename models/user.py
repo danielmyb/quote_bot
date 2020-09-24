@@ -34,7 +34,7 @@ class User:
             name = event["name"]
             content = event["content"]
             event_type = EventType(event["event_type"])
-            ping_time = event["ping_time"]
+            ping_time = event["event_time"]
             event_list.append(Event(name, content, event_type, ping_time))
 
         return event_list

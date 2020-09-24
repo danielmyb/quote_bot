@@ -78,7 +78,7 @@ class DatabaseController:
         userdata = DatabaseController.load_user_entry(user_id)
 
         userdata["events"][day] += [{"title": event.name, "content": event.content, "event_type": event.event_type,
-                                     "ping_time": event.ping_time}]
+                                     "event_time": event.event_time}]
         user_id_string = "{}".format(user_id)
         userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
 
