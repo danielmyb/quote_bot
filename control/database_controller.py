@@ -6,6 +6,7 @@
 # Copyright: Daniel Bebber, 2020
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
+import glob
 import json
 import logging
 import os
@@ -98,10 +99,10 @@ class DatabaseController:
         Returns:
             dict: Contains all events of all users.
         """
-        userdata_files = os.listdir(USERDATA_PATH)
+        userdata_files = glob.glob("{}/*.json".format(USERDATA_PATH))
         userdata = {}
         for userdata_file in userdata_files:
-            with open(os.path.join(USERDATA_PATH, userdata_file), "r") as userdata_content:
+            with open(userdata_file, "r") as userdata_content:
                 content = json.load(userdata_content)
                 userdata["{}".format(content["user_id"])] = content["events"]
 
