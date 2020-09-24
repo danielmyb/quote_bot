@@ -107,3 +107,17 @@ class DatabaseController:
                 userdata["{}".format(content["user_id"])] = content["events"]
 
         return userdata
+
+    @staticmethod
+    def save_all_events_for_user(user_id, event_data):
+        """Saves all events for a given user.
+        Args:
+            user_id (int): ID of the user.
+            event_data (dict): Contains the event data of a user.
+        """
+        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        with open(userdata_file, "r") as userdata_content:
+            content = json.load(userdata_content)
+        content["events"] = event_data
+        with open(userdata_file, "w") as userdata_content:
+            json.dump(content, userdata_content)

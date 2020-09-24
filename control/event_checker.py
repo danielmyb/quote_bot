@@ -38,7 +38,6 @@ class EventChecker:
         userdata = DatabaseController.load_all_events_from_all_users()
         today = datetime.today().weekday()
         self._ping_users(userdata, today)
-        self.removed_passed_single_events(userdata)
 
         time.sleep(self.interval)
 
@@ -48,6 +47,11 @@ class EventChecker:
             # Use fresh userdata
             userdata = DatabaseController.load_all_events_from_all_users()
             self._ping_users(userdata, current_day)
+            # Trigger weekly reset when a new week is reached
+            self.removed_passed_single_events(userdata, current_day < today)
+        else:
+            # Trigger a regular cleanup
+            self.removed_passed_single_events(userdata)
         self.check_events()
 
     def _ping_users(self, userdata, day):
@@ -106,3 +110,32 @@ class EventChecker:
             message += "\n"
 
         return message
+
+    def removed_passed_single_events(self, userdata, weekly_cleanup=False):
+        """Removes passed non-regularly events from the event lists of all users.
+        Args:
+            userdata (dict): Contains all event data of all users.
+            weekly_cleanup (bool, optional): Indicates whether all non-regularly events should be cleared or not.
+        """
+        today = "{}".format(datetime.today().weekday())
+
+        for user_id in userdata:
+            # Track that at least on change was done so that no useless database operation is called
+            at_least_one_change = False
+            days = userdata[user_id]
+            for day in days:
+                if not weekly_cleanup and day > today:
+                    break
+                for event in days[day]:
+                    # Do not remove regularly events
+                    if event["event_type"] == EventType.REGULARLY:
+                        continue
+                    if weekly_cleanup or day < today:
+                        passed = True
+                    else:
+                        passed = self.check_event_passed(event)
+                    if passed:
+                        userdata[user_id][day].remove(event)
+                        at_least_one_change = True
+            if at_least_one_change:
+                DatabaseController.save_all_events_for_user(user_id, userdata[user_id])
