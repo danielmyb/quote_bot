@@ -9,6 +9,8 @@
 import logging
 from enum import Enum
 
+from utils.localization_manager import receive_translation
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -44,3 +46,12 @@ class DayEnum(Enum):
     FRIDAY = 4
     SATURDAY = 5
     SUNDAY = 6
+
+    def receive_day_translation(self, user_language):
+        """Receive the translation of the selected day.
+        Args:
+            user_language (str): Language that should be used.
+        Returns:
+            str: Translation for the day.
+        """
+        return receive_translation("day_{}".format(self.name.lower()), user_language)

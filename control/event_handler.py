@@ -8,11 +8,14 @@
 # ----------------------------------------------
 import logging
 
+from telegram import ParseMode
+
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
 from models.event import Event, EventType
 from models.user import User
 from state_machines.user_event_creation_machine import UserEventCreationMachine
+from utils.localization_manager import receive_translation
 
 
 class EventHandler:
@@ -32,24 +35,29 @@ class EventHandler:
         user = User(update.message.from_user)
         UserEventCreationMachine.set_state_of_user(user.telegram_user.id, 1)
         EventHandler.events_in_creation[user.telegram_user.id] = {}
-        update.message.reply_text('Okay - dann legen wir mal was neues für dich an, {}! Wie soll das Event den heißen?'
-                                  .format(user.telegram_user.first_name))
+        update.message.reply_text(receive_translation("event_creation_start", user.language)
+                                  .format(USERNAME=user.telegram_user.first_name))
 
     @staticmethod
     def add_new_event_title(update, context):
         """Handles the title of the new event."""
-        if UserEventCreationMachine.receive_state_of_user(update.message.from_user.id) != 1:
+        user_id = update.message.from_user.id
+        user_language = DatabaseController.load_selected_language(user_id)
+        if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
             return
-        EventHandler.events_in_creation[update.message.from_user.id]["title"] = update.message.text
-        update.message.reply_text('Nun kannst du noch beschreiben was der Inhalt des Events ist')
+        EventHandler.events_in_creation[user_id]["title"] = update.message.text
+        update.message.reply_text(receive_translation("event_creation_content", user_language))
 
     @staticmethod
     def add_new_event_content(update, context):
-        """"""
-        if UserEventCreationMachine.receive_state_of_user(update.message.from_user.id) != 1:
+        """Handles the addition of content of a new event."""
+        user_id = update.message.from_user.id
+        user_language = DatabaseController.load_selected_language(user_id)
+        if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
             return
-        EventHandler.events_in_creation[update.message.from_user.id]["content"] = update.message.text
-        update.message.reply_text('Was darfs denn sein?', reply_markup=Event.event_keyboard_type())
+        EventHandler.events_in_creation[user_id]["content"] = update.message.text
+        update.message.reply_text(receive_translation("event_creation_type", user_language),
+                                  reply_markup=Event.event_keyboard_type(user_language))
 
     @staticmethod
     def add_new_event_query_handler(update, context):
@@ -58,6 +66,7 @@ class EventHandler:
         query.answer()
 
         user_id = query.from_user['id']
+        user_language = DatabaseController.load_selected_language(user_id)
 
         bot = BotControl.get_bot()
 
@@ -65,11 +74,11 @@ class EventHandler:
         if UserEventCreationMachine.receive_state_of_user(user_id) == 1:
             EventHandler.events_in_creation[user_id]["type"] = query.data
             if query.data == "{}".format(EventType.SINGLE.value):
-                message = "Okay, ein neues einmaliges Event!"
+                message = receive_translation("event_creation_type_single", user_language)
             elif query.data == "{}".format(EventType.REGULARLY.value):
-                message = "Okay, ein neues regelmäßiges Event!"
+                message = receive_translation("event_creation_type_regularly", user_language)
             else:
-                message = "Irgendwas ist schief gegangen..."
+                message = receive_translation("undefined_error_response", user_language)
             query.edit_message_text(text=message)
             UserEventCreationMachine.set_state_of_user(user_id, 2)
 
@@ -79,10 +88,10 @@ class EventHandler:
             if query.data[0] == 'd':
                 EventHandler.events_in_creation[user_id]["day"] = query.data[1:]
                 UserEventCreationMachine.set_state_of_user(user_id, 3)
-                query.edit_message_text(text='Gut, jetzt die Stunden')
+                query.edit_message_text(text=receive_translation("event_creation_hours", user_language))
             else:
-                bot.send_message(user_id, text='An welchem Tag findet der Spaß denn statt?',
-                                 reply_markup=Event.event_keyboard_day())
+                bot.send_message(user_id, text=receive_translation("event_creation_day", user_language),
+                                 reply_markup=Event.event_keyboard_day(user_language))
 
         # State: Requesting start hours of the event
         if UserEventCreationMachine.receive_state_of_user(user_id) == 3:
@@ -90,9 +99,9 @@ class EventHandler:
             if query.data[0] == 'h':
                 EventHandler.events_in_creation[user_id]["hours"] = query.data[1:]
                 UserEventCreationMachine.set_state_of_user(user_id, 4)
-                query.edit_message_text(text='Weiter zu den Minuten.')
+                query.edit_message_text(text=receive_translation("event_creation_minutes", user_language))
             else:
-                bot.send_message(user_id, text='Okay - nun zur Uhrzeit. Erstmal die Stunden!',
+                bot.send_message(user_id, text=receive_translation("event_creation_hours", user_language),
                                  reply_markup=Event.event_keyboard_hours())
 
         # State: Requesting start minutes of the event
@@ -101,15 +110,18 @@ class EventHandler:
             if query.data[0] == 'm':
                 EventHandler.events_in_creation[user_id]["minutes"] = query.data[1:]
                 UserEventCreationMachine.set_state_of_user(user_id, -1)
-                query.edit_message_text(text='Vielen dank - dann bastel ich das mal zusammen.')
+                query.edit_message_text(text=receive_translation("event_creation_finished", user_language))
             else:
-                bot.send_message(user_id, text='Und nun die Minuten!', reply_markup=Event.event_keyboard_minutes())
+                bot.send_message(user_id, text=receive_translation("event_creation_minutes", user_language),
+                                 reply_markup=Event.event_keyboard_minutes())
 
         # State: All data collected - creating event
         if UserEventCreationMachine.receive_state_of_user(user_id) == -1:
             event_in_creation = EventHandler.events_in_creation[user_id]
-            event = Event(event_in_creation["title"], event_in_creation["content"], event_in_creation["type"],
+            event = Event(event_in_creation["title"], event_in_creation["content"],
+                          EventType(int(event_in_creation["type"])),
                           "{}:{}".format(event_in_creation["hours"], event_in_creation["minutes"]))
             DatabaseController.save_day_event_data(user_id, event_in_creation["day"], event)
             UserEventCreationMachine.set_state_of_user(user_id, 0)
             EventHandler.events_in_creation.pop(user_id)
+            bot.send_message(user_id, text=event.pretty_print_formatting(user_id), parse_mode=ParseMode.MARKDOWN_V2)

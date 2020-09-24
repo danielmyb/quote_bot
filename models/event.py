@@ -10,7 +10,9 @@ from enum import Enum
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+from control.database_controller import DatabaseController
 from models.day import DayEnum
+from utils.localization_manager import receive_translation
 
 
 class Event:
@@ -35,26 +37,31 @@ class Event:
             self.ping_times = []
 
     @staticmethod
-    def event_keyboard_type():
+    def event_keyboard_type(user_language):
         """Generates the keyboard for the event types.
+        Args:
+            user_language (str): Language that should be used.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
-        keyboard = [[InlineKeyboardButton("{}".format(EventType.REGULARLY.name),
+        keyboard = [[InlineKeyboardButton("{}".format(EventType.REGULARLY.receive_type_translation(user_language)),
                                           callback_data="{}".format(EventType.REGULARLY.value))],
-                    [InlineKeyboardButton("{}".format(EventType.SINGLE.name),
+                    [InlineKeyboardButton("{}".format(EventType.SINGLE.receive_type_translation(user_language)),
                                           callback_data="{}".format(EventType.SINGLE.value))]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def event_keyboard_day():
+    def event_keyboard_day(user_language):
         """Generates the keyboard for days.
+        Args:
+            user_language (str): Language that should be used.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
         keyboard = []
         for day in DayEnum:
-            keyboard.append([InlineKeyboardButton("{}".format(day.name), callback_data="d{}".format(day.value))])
+            keyboard.append([InlineKeyboardButton("{}".format(day.receive_day_translation(user_language)),
+                                                  callback_data="d{}".format(day.value))])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -67,9 +74,9 @@ class Event:
         keyboard = []
         for i in range(0, 24, 4):
             keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="h{}".format(i)),
-                             InlineKeyboardButton("{}".format(i+1), callback_data="h{}".format(i+1)),
-                             InlineKeyboardButton("{}".format(i+2), callback_data="h{}".format(i+2)),
-                             InlineKeyboardButton("{}".format(i+3), callback_data="h{}".format(i+3))])
+                             InlineKeyboardButton("{}".format(i + 1), callback_data="h{}".format(i + 1)),
+                             InlineKeyboardButton("{}".format(i + 2), callback_data="h{}".format(i + 2)),
+                             InlineKeyboardButton("{}".format(i + 3), callback_data="h{}".format(i + 3))])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -80,15 +87,42 @@ class Event:
             InlineKeyboardMarkup: Generated keyboard.
         """
         # Remove 00 and 05 from loop so that the leading 0 can be shown.
-        keyboard = [[InlineKeyboardButton("00", callback_data="m0"), InlineKeyboardButton("05", callback_data="m5")]]
+        keyboard = [[InlineKeyboardButton("00", callback_data="m00"), InlineKeyboardButton("05", callback_data="m05")]]
         for i in range(15, 60, 10):
             keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="m{}".format(i)),
-                             InlineKeyboardButton("{}".format(i+5), callback_data="m{}".format(i+5))])
+                             InlineKeyboardButton("{}".format(i + 5), callback_data="m{}".format(i + 5))])
 
         return InlineKeyboardMarkup(keyboard)
+
+    def pretty_print_formatting(self, user_id):
+        """Collects all data about an event and returns a pretty printed version.
+        Args:
+            user_id (int): ID of the user - needed for localization.
+        Returns:
+            str: Pretty formatted event information.
+        """
+        user_language = DatabaseController.load_selected_language(user_id)
+        message = receive_translation("event_creation_summary_header", user_language)
+        message += "*{}:* {}\n".format(receive_translation("event_name", user_language), self.name)
+        message += "*{}:* {}\n".format(receive_translation("event_content", user_language), self.content)
+        message += "*{}:* {}\n".format(receive_translation("event_type", user_language),
+                                       self.event_type.receive_type_translation(user_language))
+        message += "*{}:* {}\n".format(receive_translation("event_start", user_language), self.event_time)
+        for ping_time in self.ping_times:
+            message += "*{}:* {}\n".format(receive_translation("event_pingtime", user_language), ping_time)
+        return message
 
 
 class EventType(Enum):
     """Enum for event types."""
     REGULARLY = 0
     SINGLE = 1
+
+    def receive_type_translation(self, user_language):
+        """Receive the translation of the selected EventType.
+        Args:
+            user_language (str): Language that should be used.
+        Returns:
+            str: Translation for the event type.
+        """
+        return receive_translation("event_type_{}".format(self.name.lower()), user_language)

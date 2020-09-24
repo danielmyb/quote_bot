@@ -1,0 +1,126 @@
+{
+  "languages": {
+    "Deutsch": "DE",
+    "English": "EN"
+  },
+  "greeting": {
+    "DE": "Hallo {USERNAME}!",
+    "EN": "Hello {USERNAME}!"
+  },
+  "confused_echo": {
+    "DE": "Joa ... hi?",
+    "EN": "Well ... hi?"
+  },
+  "undefined_error_response": {
+    "DE": "Irgendwas ist schief gegangen...",
+    "EN": "Something went wrong ... Sorry"
+  },
+  "help": {
+    "DE": "Hier könnte ihre *Hilfe* stehen\\!\nEcht jetzt",
+    "EN": "You *help* could stand here\\!\nSeriously"
+  },
+  "event": {
+    "DE": "Termin",
+    "EN": "Event"
+  },
+  "event_name": {
+    "DE": "Name",
+    "EN": "Name"
+  },
+  "event_reminder": {
+    "DE": "Termin Erinnerung",
+    "EN": "Event Reminder"
+  },
+  "event_content": {
+    "DE": "Inhalt",
+    "EN": "Content"
+  },
+  "event_type": {
+    "DE": "Terminart",
+    "EN": "Eventtype"
+  },
+  "event_start": {
+    "DE": "Start",
+    "EN": "Start"
+  },
+  "event_pingtime":{
+    "DE": "Pingzeiten",
+    "EN": "Pingtimes"
+  },
+  "event_creation_start": {
+    "DE": "Okay - dann legen wir mal was neues für dich an, {USERNAME}! Wie soll der Termin denn heißen?",
+    "EN": "Okay - lets create something new for you {USERNAME}! How should the event be named?"
+  },
+  "event_creation_content": {
+    "DE": "Nun kannst du noch beschreiben was der Inhalt des Termins ist",
+    "EN": "Now you can write something about the content of the event"
+  },
+  "event_creation_type": {
+    "DE": "Was für eine Art Termin soll es denn sein?",
+    "EN": "Which type of event do you want?"
+  },
+  "event_creation_type_single": {
+    "DE": "Okay, ein neuer, einmaliger, Termin!",
+    "EN": "Okay, a new, single, event!"
+  },
+  "event_creation_type_regularly": {
+    "DE": "Okay, ein neuer, regelmäßiger Termin!",
+    "EN": "Okay, a new, regularly, event!"
+  },
+  "event_creation_day": {
+    "DE": "An welchem Tag findet der Spaß denn statt?",
+    "EN": "On which day is the fun taking place?"
+  },
+  "event_creation_hours": {
+    "DE": "Gut, dann jetzt die Stunden.",
+    "EN": "Okay, now the hours."
+  },
+  "event_creation_minutes": {
+    "DE": "Die Minuten noch bitte!",
+    "EN": "The minutes please!"
+  },
+  "event_creation_finished": {
+    "DE": "Vielen dank - dann bastel ich das mal zusammen.",
+    "EN": "Thanks! - Now I will put this together ..."
+  },
+  "event_creation_summary_header": {
+    "DE": "Termin wurde erstellt:\n\n",
+    "EN": "Event has been created:\n\n"
+  },
+  "event_type_single": {
+    "DE": "Einmalig",
+    "EN": "Single"
+  },
+  "event_type_regularly": {
+    "DE": "Regelmäßig",
+    "EN": "Regularly"
+  },
+  "day_monday": {
+    "DE": "Montag",
+    "EN": "Monday"
+  },
+  "day_tuesday": {
+    "DE": "Dienstag",
+    "EN": "Tuesday"
+  },
+  "day_wednesday": {
+    "DE": "Mittwoch",
+    "EN": "Wednesday"
+  },
+  "day_thursday": {
+    "DE": "Donnerstag",
+    "EN": "Thursday"
+  },
+  "day_friday": {
+    "DE": "Freitag",
+    "EN": "Friday"
+  },
+  "day_saturday": {
+    "DE": "Samstag",
+    "EN": "Saturday"
+  },
+  "day_sunday": {
+    "DE": "Sonntag",
+    "EN": "Sunday"
+  }
+}

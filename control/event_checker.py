@@ -15,6 +15,7 @@ from telegram import ParseMode
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
 from models.event import EventType
+from utils.localization_manager import receive_translation
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -78,7 +79,7 @@ class EventChecker:
 
         # Only ping if there are events to notify about
         if ping_list:
-            message = self.build_ping_message(ping_list)
+            message = self.build_ping_message(user_id, ping_list)
             bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
 
     @staticmethod
@@ -91,19 +92,21 @@ class EventChecker:
         return True
 
     @staticmethod
-    def build_ping_message(events):
+    def build_ping_message(user_id, events):
         """Generates the ping message for the user.
         Args:
+            user_id (int): ID of the user - needed for localization.
             events (list of 'dict'): Contains all events of a user for a given day that are not passed yet.
         Returns:
             str: Formatted message.
         """
-        message = "*EVENT REMINDER*\n\n"
+        user_language = DatabaseController.load_selected_language(user_id)
+        message = "*{}*\n\n".format(receive_translation("event_reminder", user_language))
 
         for event in events:
-            message += "*Event:* {}\n".format(event["title"])
-            message += "*Inhalt:* {}\n".format(event["content"])
-            message += "*Start:* {}\n".format(event["event_time"])
+            message += "*{}:* {}\n".format(receive_translation("event", user_language), event["title"])
+            message += "*{}:* {}\n".format(receive_translation("event_content", user_language), event["content"])
+            message += "*{}:* {}\n".format(receive_translation("event_start", user_language), event["event_time"])
             message += "\n"
 
         return message

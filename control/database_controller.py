@@ -12,6 +12,7 @@ import logging
 import os
 
 from models.day import DayEnum
+from utils.localization_manager import DEFAULT_LANGUAGE
 from utils.path_utils import USERDATA_PATH, PROJECT_ROOT
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -56,7 +57,7 @@ class DatabaseController:
 
         if not os.path.isfile(userdata_path):
             with open(userdata_path, "w") as userdata_file:
-                user_dict = {"user_id": user_id, "events": {}}
+                user_dict = {"user_id": user_id, "language": DEFAULT_LANGUAGE, "events": {}}
                 for day in DayEnum:
                     user_dict["events"][day.value] = []
                 json.dump(user_dict, userdata_file)
@@ -65,6 +66,22 @@ class DatabaseController:
             userdata = json.load(userdata_file)
 
         return userdata
+
+    @staticmethod
+    def load_selected_language(user_id):
+        """Loads the code of language the user has selected.
+        Args:
+            user_id (int): ID of the User
+        Returns:
+            str: Code of the language.
+        """
+        user_id_string = "{}".format(user_id)
+        userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
+
+        with open(userdata_path, "r") as userdata_file:
+            userdata = json.load(userdata_file)
+
+        return userdata["language"]
 
     @staticmethod
     def save_day_event_data(user_id, day, event):
@@ -77,8 +94,8 @@ class DatabaseController:
         logger.info("%s %s %s", user_id, day, event)
         userdata = DatabaseController.load_user_entry(user_id)
 
-        userdata["events"][day] += [{"title": event.name, "content": event.content, "event_type": event.event_type,
-                                     "event_time": event.event_time}]
+        userdata["events"][day] += [{"title": event.name, "content": event.content,
+                                     "event_type": event.event_type.value, "event_time": event.event_time}]
         user_id_string = "{}".format(user_id)
         userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
 

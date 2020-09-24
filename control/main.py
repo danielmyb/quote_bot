@@ -16,6 +16,7 @@ from control.event_checker import EventChecker
 from control.event_handler import EventHandler
 from models.user import User
 from state_machines.user_event_creation_machine import UserEventCreationMachine
+from utils.localization_manager import receive_translation
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -30,25 +31,27 @@ db_controller = DatabaseController()
 def start(update, context):
     """Send a message when the command /start is issued."""
     user = User(update.message.from_user)
-    update.message.reply_text('Hallo {}!'.format(user.telegram_user.first_name))
+    update.message.reply_text(
+        receive_translation("greeting", user.language).format(USERNAME=user.telegram_user.first_name))
 
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
-    update.message.reply_markdown_v2('*YOU NEED SOME HELP?* \n'
-                                     'Gibs dann irgendwann undso')
+    user = User(update.message.from_user)
+    update.message.reply_markdown_v2(receive_translation("help", user.language))
 
 
 def echo(update, context):
     """Echo the user message."""
-    user_id = User(update.message.from_user).telegram_user.id
+    user = User(update.message.from_user)
+    user_id = user.telegram_user.id
     if UserEventCreationMachine.receive_state_of_user(user_id) == 1:
         if user_id in EventHandler.events_in_creation.keys() and not EventHandler.events_in_creation[user_id]:
             EventHandler.add_new_event_title(update, context)
         elif EventHandler.events_in_creation[user_id]["title"]:
             EventHandler.add_new_event_content(update, context)
     else:
-        update.message.reply_text("Ähm hi ...?")
+        update.message.reply_text(receive_translation("confused_echo", user.language))
 
 
 def main():

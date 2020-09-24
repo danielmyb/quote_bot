@@ -19,6 +19,7 @@ class User:
         """
         self.telegram_user = user
         self.user_data = DatabaseController.load_user_entry(self.telegram_user.id)
+        self.language = self.user_data["language"]
 
     def retrieve_all_events(self):
         """
