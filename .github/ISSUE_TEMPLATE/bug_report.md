@@ -7,21 +7,14 @@ assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**Summary**
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Summary how the bug can be reproduced
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Additional information**
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+Additional details about this bug
 
-**Additional context**
-Add any other context about the problem here.
+**Acceptance criteria**
+
+- [ ] Bug is fixed
