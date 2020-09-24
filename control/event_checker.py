@@ -47,11 +47,8 @@ class EventChecker:
             # Use fresh userdata
             userdata = DatabaseController.load_all_events_from_all_users()
             self._ping_users(userdata, current_day)
-            # Trigger weekly reset when a new week is reached
-            self.removed_passed_single_events(userdata, current_day < today)
-        else:
-            # Trigger a regular cleanup
-            self.removed_passed_single_events(userdata)
+        # Trigger a cleanup
+        self.removed_passed_single_events(userdata)
         self.check_events()
 
     def _ping_users(self, userdata, day):
@@ -111,11 +108,10 @@ class EventChecker:
 
         return message
 
-    def removed_passed_single_events(self, userdata, weekly_cleanup=False):
+    def removed_passed_single_events(self, userdata):
         """Removes passed non-regularly events from the event lists of all users.
         Args:
             userdata (dict): Contains all event data of all users.
-            weekly_cleanup (bool, optional): Indicates whether all non-regularly events should be cleared or not.
         """
         today = "{}".format(datetime.today().weekday())
 
@@ -124,13 +120,13 @@ class EventChecker:
             at_least_one_change = False
             days = userdata[user_id]
             for day in days:
-                if not weekly_cleanup and day > today:
+                if day > today:
                     break
                 for event in days[day]:
                     # Do not remove regularly events
                     if event["event_type"] == EventType.REGULARLY:
                         continue
-                    if weekly_cleanup or day < today:
+                    if day < today:
                         passed = True
                     else:
                         passed = self.check_event_passed(event)
