@@ -31,6 +31,10 @@
     "DE": "Termin",
     "EN": "Event"
   },
+  "no_events": {
+    "DE": "Keine Termine",
+    "EN": "No events"
+  },
   "event_name": {
     "DE": "Name",
     "EN": "Name"
@@ -94,6 +98,10 @@
   "event_creation_summary_header": {
     "DE": "Termin wurde erstellt:\n\n",
     "EN": "Event has been created:\n\n"
+  },
+  "event_list_header": {
+    "DE": "Folgende Termine hast du angelegt",
+    "EN": "You have created the following events"
   },
   "event_type_single": {
     "DE": "Einmalig",

@@ -12,6 +12,7 @@ from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
+from models.day import DayEnum
 from models.event import Event, EventType
 from models.user import User
 from state_machines.user_event_creation_machine import UserEventCreationMachine
@@ -124,4 +125,28 @@ class EventHandler:
             DatabaseController.save_day_event_data(user_id, event_in_creation["day"], event)
             UserEventCreationMachine.set_state_of_user(user_id, 0)
             EventHandler.events_in_creation.pop(user_id)
-            bot.send_message(user_id, text=event.pretty_print_formatting(user_id), parse_mode=ParseMode.MARKDOWN_V2)
+
+            message = receive_translation("event_creation_summary_header", user_language)
+            message += event.pretty_print_formatting(user_id)
+            bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
+
+    @staticmethod
+    def list_all_events_of_user(update, context):
+        """Lists all events of the user."""
+        user = User(update.message.from_user)
+
+        message = "*{}:*\n\n".format(receive_translation("event_list_header", user.language))
+        event_data = DatabaseController.read_event_data_of_user(user.telegram_user.id)
+
+        for day in event_data:
+            message += "*{}:*\n".format(DayEnum(int(day)).receive_day_translation(user.language))
+
+            if not event_data[day]:
+                message += "{}\n\n".format(receive_translation("no_events", user.language))
+            for event in event_data[day]:
+                event_object = Event(event["title"], event["content"], EventType(event["event_type"]),
+                                     event["event_time"])
+                message += event_object.pretty_print_formatting(user.telegram_user.id)
+                message += "\n"
+
+        update.message.reply_markdown_v2(message)

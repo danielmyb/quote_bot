@@ -102,13 +102,16 @@ class DatabaseController:
         with open(userdata_path, "w") as userdata_file:
             json.dump(userdata, userdata_file)
 
-    def load_event_data(self, user_id):
-        """
+    @staticmethod
+    def read_event_data_of_user(user_id):
+        """Reads the event data of a given user.
         Args:
             user_id (int): ID of user.
         Returns:
 
         """
+        user_data = DatabaseController._read_user_data(user_id)
+        return user_data["events"]
 
     @staticmethod
     def _read_user_data(user_id):

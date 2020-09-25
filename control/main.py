@@ -67,6 +67,7 @@ def main():
     dp.add_handler(CommandHandler("help", help_command))
     dp.add_handler(CommandHandler("config", Configurator.start_configuration_dialog))
     dp.add_handler(CommandHandler("new_event", EventHandler.add_new_event))
+    dp.add_handler(CommandHandler("list_events", EventHandler.list_all_events_of_user))
     dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_dialog, pattern="config_start_[_a-zA-Z]*"))
     dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_change, pattern="config_select_[_a-zA-Z]*"))
     dp.add_handler(CallbackQueryHandler(EventHandler.add_new_event_query_handler))

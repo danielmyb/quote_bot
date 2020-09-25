@@ -102,8 +102,7 @@ class Event:
             str: Pretty formatted event information.
         """
         user_language = DatabaseController.load_selected_language(user_id)
-        message = receive_translation("event_creation_summary_header", user_language)
-        message += "*{}:* {}\n".format(receive_translation("event_name", user_language), self.name)
+        message = "*{}:* {}\n".format(receive_translation("event_name", user_language), self.name)
         message += "*{}:* {}\n".format(receive_translation("event_content", user_language), self.content)
         message += "*{}:* {}\n".format(receive_translation("event_type", user_language),
                                        self.event_type.receive_type_translation(user_language))
