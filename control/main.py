@@ -68,8 +68,7 @@ def main():
     dp.add_handler(CommandHandler("config", Configurator.start_configuration_dialog))
     dp.add_handler(CommandHandler("new_event", EventHandler.add_new_event))
     dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_dialog, pattern="config_start_[_a-zA-Z]*"))
-    dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_language_change,
-                                        pattern="config_select_[_a-zA-Z]*"))
+    dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_change, pattern="config_select_[_a-zA-Z]*"))
     dp.add_handler(CallbackQueryHandler(EventHandler.add_new_event_query_handler))
 
     # on noncommand i.e message - echo the message on Telegram

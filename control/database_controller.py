@@ -111,6 +111,30 @@ class DatabaseController:
         """
 
     @staticmethod
+    def _read_user_data(user_id):
+        """Reads the data of the given user.
+        Args:
+            user_id (int): ID of the user whose data should be read.
+        Returns:
+            dict: Contains all data of the user.
+        """
+        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        with open(userdata_file, "r") as userdata_content:
+            content = json.load(userdata_content)
+        return content
+
+    @staticmethod
+    def _save_user_data(user_id, content):
+        """Saves the data of the given user.
+        Args:
+            user_id (int): ID of the user whose data should be saved.
+            content (dict): Contains the user data.
+        """
+        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        with open(userdata_file, "w") as userdata_content:
+            json.dump(content, userdata_content)
+
+    @staticmethod
     def load_all_events_from_all_users():
         """Loads all saved events from all users.
         Returns:
@@ -132,12 +156,9 @@ class DatabaseController:
             user_id (int): ID of the user.
             event_data (dict): Contains the event data of a user.
         """
-        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
-        with open(userdata_file, "r") as userdata_content:
-            content = json.load(userdata_content)
+        content = DatabaseController._read_user_data(user_id)
         content["events"] = event_data
-        with open(userdata_file, "w") as userdata_content:
-            json.dump(content, userdata_content)
+        DatabaseController._save_user_data(user_id, content)
 
     @staticmethod
     def save_user_language(user_id, language):
@@ -146,9 +167,17 @@ class DatabaseController:
             user_id (int): ID of the user whose language should be changed.
             language (str): Code of the desired language.
         """
-        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
-        with open(userdata_file, "r") as userdata_content:
-            content = json.load(userdata_content)
+        content = DatabaseController._read_user_data(user_id)
         content["language"] = language
-        with open(userdata_file, "w") as userdata_content:
-            json.dump(content, userdata_content)
+        DatabaseController._save_user_data(user_id, content)
+
+    @staticmethod
+    def save_daily_ping(user_id, daily_ping):
+        """Saves the selected daily ping config for the given user.
+        Args:
+            user_id (int): ID of the user.
+            daily_ping (bool): Indicates whether a daily ping should be done or not.
+        """
+        content = DatabaseController._read_user_data(user_id)
+        content["daily_ping"] = daily_ping
+        DatabaseController._save_user_data(user_id, content)

@@ -3,6 +3,14 @@
     "Deutsch": "DE",
     "English": "EN"
   },
+  "yes": {
+    "DE": "Ja",
+    "EN": "Yes"
+  },
+  "no": {
+    "DE": "Nein",
+    "EN": "No"
+  },
   "greeting": {
     "DE": "Hallo {USERNAME}!",
     "EN": "Hello {USERNAME}!"
@@ -142,5 +150,17 @@
   "config_start_daily_ping": {
     "DE": "Tägliche Erinnerung",
     "EN": "Daily Ping"
+  },
+  "config_daily_ping_decide": {
+    "DE": "Möchtest du jeden Tag um 0:00 Uhr über alle Termine des Tages benachrichtigt werden?",
+    "EN": "Do you want to be pinged about the events of the day at midnight?"
+  },
+  "config_daily_ping_enable": {
+    "DE": "Okay - Du wirst ab jetzt immer um 0:00 Uhr über die Termine des Tages benachrichtigt.",
+    "EN": "Okay - You will be pinged about the events of the day at midnight."
+  },
+  "config_daily_ping_disable": {
+    "DE": "Okay - Ich werde dich nicht mehr um 0:00 Uhr über die Termine des Tages benachrichtigen.",
+    "EN": "Okay - I will not ping you about the events of the day at midnight."
   }
 }
