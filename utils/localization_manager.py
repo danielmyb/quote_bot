@@ -31,3 +31,13 @@ def receive_translation(keyword, language=DEFAULT_LANGUAGE):
         if not localization_data[keyword][language]:
             return localization_data[keyword][DEFAULT_LANGUAGE]
         return localization_data[keyword][language]
+
+
+def receive_languages():
+    """Retrieve all available languages.
+    Returns:
+        dict: Contains all languages with their keywords.
+    """
+    with open(LOCALIZATION_PATH, "r", encoding='UTF-8') as localization_file:
+        localization_data = json.load(localization_file)
+    return localization_data["languages"]

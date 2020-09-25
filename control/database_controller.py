@@ -138,3 +138,17 @@ class DatabaseController:
         content["events"] = event_data
         with open(userdata_file, "w") as userdata_content:
             json.dump(content, userdata_content)
+
+    @staticmethod
+    def save_user_language(user_id, language):
+        """Saves the selected language for the given user.
+        Args:
+            user_id (int): ID of the user whose language should be changed.
+            language (str): Code of the desired language.
+        """
+        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        with open(userdata_file, "r") as userdata_content:
+            content = json.load(userdata_content)
+        content["language"] = language
+        with open(userdata_file, "w") as userdata_content:
+            json.dump(content, userdata_content)

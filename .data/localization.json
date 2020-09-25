@@ -122,5 +122,25 @@
   "day_sunday": {
     "DE": "Sonntag",
     "EN": "Sunday"
+  },
+  "config_dialog_started": {
+    "DE": "Was möchtest du anpassen?",
+    "EN": "What do you want to configure?"
+  },
+  "config_start_language": {
+    "DE": "Sprache",
+    "EN": "Language"
+  },
+  "config_language_which": {
+    "DE": "In welcher Sprache soll ich mit dir sprechen?",
+    "EN": "In which language should I answer you?"
+  },
+  "config_language_changed": {
+    "DE": "Okay - Ich spreche jetzt deutsch mit dir.",
+    "EN": "Okay - I am talking in english to you now."
+  },
+  "config_start_daily_ping": {
+    "DE": "Tägliche Erinnerung",
+    "EN": "Daily Ping"
   }
 }

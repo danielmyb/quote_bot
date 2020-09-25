@@ -11,6 +11,7 @@ import logging
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 from control.bot_control import BotControl
+from control.configurator import Configurator
 from control.database_controller import DatabaseController
 from control.event_checker import EventChecker
 from control.event_handler import EventHandler
@@ -64,7 +65,11 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help_command))
+    dp.add_handler(CommandHandler("config", Configurator.start_configuration_dialog))
     dp.add_handler(CommandHandler("new_event", EventHandler.add_new_event))
+    dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_dialog, pattern="config_start_[_a-zA-Z]*"))
+    dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_language_change,
+                                        pattern="config_select_[_a-zA-Z]*"))
     dp.add_handler(CallbackQueryHandler(EventHandler.add_new_event_query_handler))
 
     # on noncommand i.e message - echo the message on Telegram
