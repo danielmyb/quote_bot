@@ -103,6 +103,22 @@ class DatabaseController:
             json.dump(userdata, userdata_file)
 
     @staticmethod
+    def read_event_of_user(user_id, day, name):
+        """Read the event data of a user for the given day with the given name.
+        Args:
+            user_id (int): ID of user.
+            day (int): Integer representation of the day.
+            name (str): Name of the event.
+        Returns:
+            dict: Containts all data of the event.
+        """
+        event_data = DatabaseController.read_event_data_of_user(user_id)
+        for event in event_data[day]:
+            if event['title'] == name:
+                return event
+        return None
+
+    @staticmethod
     def read_event_data_of_user(user_id):
         """Reads the event data of a given user.
         Args:

@@ -16,6 +16,7 @@ from control.database_controller import DatabaseController
 from control.event_checker import EventChecker
 from control.event_handler import EventHandler
 from models.user import User
+from state_machines.user_event_alteration_machine import UserEventAlterationMachine
 from state_machines.user_event_creation_machine import UserEventCreationMachine
 from utils.localization_manager import receive_translation
 
@@ -42,7 +43,7 @@ def help_command(update, context):
     update.message.reply_markdown_v2(receive_translation("help", user.language))
 
 
-def echo(update, context):
+def parse_input(update, context):
     """Echo the user message."""
     user = User(update.message.from_user)
     user_id = user.telegram_user.id
@@ -51,6 +52,8 @@ def echo(update, context):
             EventHandler.add_new_event_title(update, context)
         elif EventHandler.events_in_creation[user_id]["title"]:
             EventHandler.add_new_event_content(update, context)
+    if UserEventAlterationMachine.receive_state_of_user(user_id) > 10:
+        EventHandler.event_alteration_handle_reply(update, context)
     else:
         update.message.reply_text(receive_translation("confused_echo", user.language))
 
@@ -70,10 +73,13 @@ def main():
     dp.add_handler(CommandHandler("list_events", EventHandler.list_all_events_of_user))
     dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_dialog, pattern="config_start_[_a-zA-Z]*"))
     dp.add_handler(CallbackQueryHandler(Configurator.handle_configuration_change, pattern="config_select_[_a-zA-Z]*"))
+    dp.add_handler(CallbackQueryHandler(EventHandler.event_alteration_start, pattern="event_alteration_[a-zA-Z]*"))
+    dp.add_handler(CallbackQueryHandler(EventHandler.event_alteration_perform,
+                                        pattern="event_(delete|change)_[0-6]_[a-zA-Z]+"))
     dp.add_handler(CallbackQueryHandler(EventHandler.add_new_event_query_handler))
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, parse_input))
 
     # Start the Bot
     updater.start_polling()

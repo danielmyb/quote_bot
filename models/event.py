@@ -94,6 +94,72 @@ class Event:
 
         return InlineKeyboardMarkup(keyboard)
 
+    @staticmethod
+    def event_keyboard_alteration(user_language):
+        """Generates the keyboard for event alteration.
+        Args:
+            user_language (str): Language that should be used.
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton(receive_translation("event_alteration_change", user_language),
+                                     callback_data="event_alteration_change"),
+                InlineKeyboardButton(receive_translation("event_alteration_delete", user_language),
+                                     callback_data="event_alteration_delete")
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def event_keyboard_alteration_action(events, user_language, mode):
+        """Generates the event alteration keyboard for the given mode.
+        Args:
+            events (dict): Contains all events of a user.
+            user_language (str): Language that should be used.
+            mode (str): Contains the alteration mode (delete or change)
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        keyboard = []
+        for day in events:
+            keyboard_day = []
+            for event in events[day]:
+                title = event["title"]
+                event_description = "{} ({}: {})".format(
+                    title, DayEnum(int(day)).receive_day_translation(user_language), event["event_time"])
+                keyboard_day.append(
+                    InlineKeyboardButton(event_description, callback_data="event_{}_{}_{}".format(mode, day, title))
+                )
+            if keyboard_day:
+                keyboard.append(keyboard_day)
+
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def event_keyboard_alteration_change_start(user_language, callback_prefix):
+        """Generates the event alternation change keyboard.
+        Args:
+            user_language (str): Language that should be used.
+            callback_prefix (str): Prefix that is used to generate the callback data string.
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        keyboard = [
+            [InlineKeyboardButton(receive_translation("event_name", user_language),
+                                  callback_data="{}_name".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("event_content", user_language),
+                                  callback_data="{}_content".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("event_type", user_language),
+                                  callback_data="{}_type".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("event_start", user_language),
+                                  callback_data="{}_start".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("done", user_language),
+                                  callback_data="{}_done".format(callback_prefix))]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
     def pretty_print_formatting(self, user_id):
         """Collects all data about an event and returns a pretty printed version.
         Args:

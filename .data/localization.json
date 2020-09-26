@@ -11,6 +11,10 @@
     "DE": "Nein",
     "EN": "No"
   },
+  "done": {
+    "DE": "Fertig",
+    "EN": "Done"
+  },
   "greeting": {
     "DE": "Hallo {USERNAME}!",
     "EN": "Hello {USERNAME}!"
@@ -56,7 +60,7 @@
     "EN": "Start"
   },
   "event_pingtime":{
-    "DE": "Pingzeiten",
+    "DE": "Erinnerungszeiten",
     "EN": "Pingtimes"
   },
   "event_creation_start": {
@@ -110,6 +114,34 @@
   "event_type_regularly": {
     "DE": "Regelmäßig",
     "EN": "Regularly"
+  },
+  "event_alteration_change": {
+    "DE": "Ändern",
+    "EN": "Change"
+  },
+  "event_alteration_delete": {
+    "DE": "Löschen",
+    "EN": "Delete"
+  },
+  "event_alteration_change_header": {
+    "DE": "Welchen Termin möchtest du verändern?",
+    "EN": "Which event you would like to change?"
+  },
+  "event_alteration_delete_header": {
+    "DE": "Welchen Termin möchtest du löschen?",
+    "EN": "Which event you would like to delete?"
+  },
+  "event_alteration_change_decision": {
+    "DE": "Was möchtest du an dem Termin verändern?",
+    "EN": "What do you want to change about this event?"
+  },
+  "event_alteration_change_name": {
+    "DE": "Bitte gebe den neuen Namen für den Termin an.",
+    "EN": "Please enter the new name for the event."
+  },
+  "event_alteration_change_done": {
+    "DE": "Änderungen gespeichert.",
+    "EN": "Changes saved."
   },
   "day_monday": {
     "DE": "Montag",
