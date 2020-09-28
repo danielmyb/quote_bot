@@ -143,6 +143,10 @@
     "DE": "Bitte gebe den neuen Inhalt für den Termin an.",
     "EN": "Please enter the new content for the event."
   },
+  "event_alteration_change_type": {
+    "DE": "Bitte wähle die neue Terminart aus:",
+    "EN": "Please select the new type for the event:"
+  },
   "event_alteration_change_done": {
     "DE": "Änderungen gespeichert.",
     "EN": "Changes saved."

@@ -37,17 +37,18 @@ class Event:
             self.ping_times = []
 
     @staticmethod
-    def event_keyboard_type(user_language):
+    def event_keyboard_type(user_language, callback_prefix=""):
         """Generates the keyboard for the event types.
         Args:
             user_language (str): Language that should be used.
+            callback_prefix (str, optional): Prefix that should be used for the callback data parameter.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
         keyboard = [[InlineKeyboardButton("{}".format(EventType.REGULARLY.receive_type_translation(user_language)),
-                                          callback_data="{}".format(EventType.REGULARLY.value))],
+                                          callback_data="{}{}".format(callback_prefix, EventType.REGULARLY.value))],
                     [InlineKeyboardButton("{}".format(EventType.SINGLE.receive_type_translation(user_language)),
-                                          callback_data="{}".format(EventType.SINGLE.value))]]
+                                          callback_data="{}{}".format(callback_prefix, EventType.SINGLE.value))]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod

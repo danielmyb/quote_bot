@@ -188,10 +188,14 @@ class EventHandler:
 
         user_id = query.from_user['id']
         user_language = DatabaseController.load_selected_language(user_id)
-        logging.info(query.data)
+        logging.info("data: %s, state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user_id))
 
         # Handle change of events
         if query.data.startswith("event_change"):
+
+            event_day = query.data.split('_')[2]
+            event_name = "".join(query.data.split('_')[3])
+            event_suffix = "{}_{}".format(event_day, event_name)
 
             # State: Choice - Check which button the user clicked after change was started.
             if UserEventAlterationMachine.receive_state_of_user(user_id) == 99:
@@ -209,8 +213,6 @@ class EventHandler:
 
             # State: Initial - return options to the user.
             if UserEventAlterationMachine.receive_state_of_user(user_id) == 0:
-                event_day = query.data.split('_')[2]
-                event_name = "".join(query.data.split('_')[3:])
                 EventHandler.events_in_alteration[user_id] = {}
                 EventHandler.events_in_alteration[user_id]["old"] = \
                     DatabaseController.read_event_of_user(user_id, event_day, event_name)
@@ -235,11 +237,22 @@ class EventHandler:
 
             # State: Type - Change type of event.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 3:
-                query.edit_message_text(text="NYI")
+                query.edit_message_text(text=receive_translation("event_alteration_change_type", user_language),
+                                        reply_markup=Event.event_keyboard_type(user_language, callback_prefix=
+                                        "event_change_{}_type_".format(event_suffix)))
+                UserEventAlterationMachine.set_state_of_user(user_id, 13)
 
             # State: Start time - Change start time of event.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 4:
-                query.edit_message_text(text="NYI")
+                UserEventAlterationMachine.set_state_of_user(user_id, 14)
+
+            # State: Alter event type
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 13:
+                EventHandler.events_in_alteration[user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
+                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
+                                        reply_markup=Event.event_keyboard_alteration_change_start(
+                                            user_language, "event_change_{}".format(event_suffix)))
 
             # State: Done - Save changes and delete temporary object.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == -1:
@@ -285,11 +298,3 @@ class EventHandler:
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
                                                                                        "event_change_{}".format(
                                                                                            event_suffix)))
-
-        # State: Alter type
-        elif state == 13:
-            EventHandler.events_in_alteration[user_id]['title'] = update.message.text
-
-        # State: Alter start time
-        elif state == 14:
-            EventHandler.events_in_alteration[user_id]['title'] = update.message.text
