@@ -97,7 +97,7 @@ class Event:
         # Remove 00 and 05 from loop so that the leading 0 can be shown.
         keyboard = [[InlineKeyboardButton("00", callback_data="{}m00".format(callback_prefix)),
                      InlineKeyboardButton("05", callback_data="{}m05".format(callback_prefix))]]
-        for i in range(15, 60, 10):
+        for i in range(10, 60, 10):
             keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="{}m{}".format(callback_prefix, i)),
                              InlineKeyboardButton("{}".format(i + 5),
                                                   callback_data="{}m{}".format(callback_prefix, i + 5))])
