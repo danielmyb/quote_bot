@@ -110,7 +110,7 @@ class DatabaseController:
             day (int): Integer representation of the day.
             name (str): Name of the event.
         Returns:
-            dict: Containts all data of the event.
+            dict: Contains all data of the event.
         """
         event_data = DatabaseController.read_event_data_of_user(user_id)
         for event in event_data[day]:

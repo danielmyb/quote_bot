@@ -139,6 +139,10 @@
     "DE": "Bitte gebe den neuen Namen für den Termin an.",
     "EN": "Please enter the new name for the event."
   },
+  "event_alteration_change_content": {
+    "DE": "Bitte gebe den neuen Inhalt für den Termin an.",
+    "EN": "Please enter the new content for the event."
+  },
   "event_alteration_change_done": {
     "DE": "Änderungen gespeichert.",
     "EN": "Changes saved."

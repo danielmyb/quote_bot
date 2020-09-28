@@ -230,7 +230,8 @@ class EventHandler:
 
             # State: Content - Change content of event.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 2:
-                query.edit_message_text(text="NYI")
+                query.edit_message_text(text=receive_translation("event_alteration_change_content", user_language))
+                UserEventAlterationMachine.set_state_of_user(user_id, 12)
 
             # State: Type - Change type of event.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 3:
@@ -253,6 +254,7 @@ class EventHandler:
                 user_events[day] = events_for_day
                 DatabaseController.save_all_events_for_user(user_id, user_events)
                 query.edit_message_text(text=receive_translation("event_alteration_change_done", user_language))
+                UserEventAlterationMachine.set_state_of_user(user_id, 0)
 
     @staticmethod
     def event_alteration_handle_reply(update, context):
@@ -278,7 +280,7 @@ class EventHandler:
         # State: Alter content
         elif state == 12:
             EventHandler.events_in_alteration[user_id]['new']['content'] = update.message.text
-            UserEventAlterationMachine.set_state_of_user(user_id, 0)
+            UserEventAlterationMachine.set_state_of_user(user_id, 99)
             bot.send_message(user_id, text=receive_translation("event_alteration_change_decision", user_language),
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
                                                                                        "event_change_{}".format(
