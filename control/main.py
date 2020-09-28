@@ -52,7 +52,7 @@ def parse_input(update, context):
             EventHandler.add_new_event_title(update, context)
         elif EventHandler.events_in_creation[user_id]["title"]:
             EventHandler.add_new_event_content(update, context)
-    if UserEventAlterationMachine.receive_state_of_user(user_id) > 10:
+    elif UserEventAlterationMachine.receive_state_of_user(user_id) > 10:
         EventHandler.event_alteration_handle_reply(update, context)
     else:
         update.message.reply_text(receive_translation("confused_echo", user.language))
