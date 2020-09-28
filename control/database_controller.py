@@ -119,6 +119,19 @@ class DatabaseController:
         return None
 
     @staticmethod
+    def delete_event_of_user(user_id, day, name):
+        """Removes the event with the given name from the given user on the given day.
+        Args:
+            user_id (int): ID of user.
+            day (int): Integer representation of the day.
+            name (str): Name of the event.
+        """
+        user_data = DatabaseController.read_event_data_of_user(user_id)
+        event = DatabaseController.read_event_of_user(user_id, day, name)
+        user_data[day].remove(event)
+        DatabaseController.save_all_events_for_user(user_id, user_data)
+
+    @staticmethod
     def read_event_data_of_user(user_id):
         """Reads the event data of a given user.
         Args:

@@ -190,12 +190,12 @@ class EventHandler:
         user_language = DatabaseController.load_selected_language(user_id)
         logging.info("data: %s | state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user_id))
 
+        event_day = query.data.split('_')[2]
+        event_name = "".join(query.data.split('_')[3])
+        event_suffix = "{}_{}".format(event_day, event_name)
+
         # Handle change of events
         if query.data.startswith("event_change"):
-
-            event_day = query.data.split('_')[2]
-            event_name = "".join(query.data.split('_')[3])
-            event_suffix = "{}_{}".format(event_day, event_name)
 
             # State: Choice - Check which button the user clicked after change was started.
             if UserEventAlterationMachine.receive_state_of_user(user_id) == 99:
@@ -292,6 +292,34 @@ class EventHandler:
                 query.edit_message_text(text=receive_translation("event_alteration_change_done", user_language))
                 EventHandler.events_in_alteration.pop(user_id)
                 UserEventAlterationMachine.set_state_of_user(user_id, 0)
+
+        elif query.data.startswith("event_delete"):
+
+            # State: Initial - request confirmation from user
+            if UserEventAlterationMachine.receive_state_of_user(user_id) == 0:
+
+                message = receive_translation("event_alteration_delete_request_confirmation", user_language)
+                message += "\n"
+
+                event_data = DatabaseController.read_event_of_user(user_id, event_day, event_name)
+                event = Event(event_name, event_data['content'], EventType(event_data['event_type']),
+                              event_data['event_time'])
+
+                message += event.pretty_print_formatting(user_id)
+
+                query.edit_message_text(text=message, reply_markup=Event.event_keyboard_confirmation(
+                    user_language, "event_delete_{}".format(event_suffix)), parse_mode=ParseMode.MARKDOWN_V2)
+
+                UserEventAlterationMachine.set_state_of_user(user_id, 101)
+
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 101:
+
+                if query.data.split('_')[-1] == 'yes':
+                    DatabaseController.delete_event_of_user(user_id, event_day, event_name)
+                    query.edit_message_text(text=receive_translation("event_alteration_delete_confirmed",
+                                                                     user_language))
+                elif query.data.split('_')[-1] == 'no':
+                    query.edit_message_text(text=receive_translation("event_alteration_delete_aborted", user_language))
 
     @staticmethod
     def event_alteration_handle_reply(update, context):

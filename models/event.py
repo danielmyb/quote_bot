@@ -170,6 +170,25 @@ class Event:
         ]
         return InlineKeyboardMarkup(keyboard)
 
+    @staticmethod
+    def event_keyboard_confirmation(user_language, callback_prefix):
+        """Generates the event alteration delete confirmation keyboard.
+        Args:
+            user_language (str): Language that should be used.
+            callback_prefix (str): Prefix that is used to generate the callback data string.
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton(receive_translation("yes", user_language),
+                                     callback_data="{}_yes".format(callback_prefix)),
+                InlineKeyboardButton(receive_translation("no", user_language),
+                                     callback_data="{}_no".format(callback_prefix))
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
     def pretty_print_formatting(self, user_id):
         """Collects all data about an event and returns a pretty printed version.
         Args:

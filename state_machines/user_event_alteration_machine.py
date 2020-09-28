@@ -53,3 +53,5 @@ class ValidStates(Enum):
     ALTER_START_TIME_MINUTES = 42
 
     PARSE_CHOICE = 99
+
+    DELETE_CONFIRMATION = 101
