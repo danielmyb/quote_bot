@@ -84,6 +84,12 @@ class EventChecker:
 
     @staticmethod
     def check_event_passed(event):
+        """Checks if the given event is already passed.
+        Args:
+            event (Event):
+        Returns:
+            bool: Determines whether the event has passed or not.
+        """
         event_hour, event_minute = event["event_time"].split(":")
         current_time = datetime.now()
         if int(event_hour) > current_time.hour or (int(event_hour) == current_time.hour and
