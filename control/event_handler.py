@@ -188,7 +188,7 @@ class EventHandler:
 
         user_id = query.from_user['id']
         user_language = DatabaseController.load_selected_language(user_id)
-        logging.info("data: %s, state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user_id))
+        logging.info("data: %s | state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user_id))
 
         # Handle change of events
         if query.data.startswith("event_change"):
@@ -244,11 +244,34 @@ class EventHandler:
 
             # State: Start time - Change start time of event.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 4:
-                UserEventAlterationMachine.set_state_of_user(user_id, 14)
+                query.edit_message_text(text=receive_translation("event_alteration_change_hours", user_language),
+                                        reply_markup=Event.event_keyboard_hours(
+                                            callback_prefix="event_change_{}_hours_".format(event_suffix)))
+                UserEventAlterationMachine.set_state_of_user(user_id, 41)
 
             # State: Alter event type
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 13:
                 EventHandler.events_in_alteration[user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
+                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
+                                        reply_markup=Event.event_keyboard_alteration_change_start(
+                                            user_language, "event_change_{}".format(event_suffix)))
+
+            # State: Alter event hours
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 41:
+                EventHandler.events_in_alteration[user_id]['new']['event_time'] = \
+                    "{}:{}".format(query.data.split('_')[-1][1:],
+                                   EventHandler.events_in_alteration[user_id]['new']['event_time'].split(':')[1])
+                UserEventAlterationMachine.set_state_of_user(user_id, 42)
+                query.edit_message_text(text=receive_translation("event_alteration_change_minutes", user_language),
+                                        reply_markup=Event.event_keyboard_minutes(
+                                            callback_prefix="event_change_{}_minutes_".format(event_suffix)))
+
+            # State: Alter event minutes
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 42:
+                EventHandler.events_in_alteration[user_id]['new']['event_time'] = \
+                    "{}:{}".format(EventHandler.events_in_alteration[user_id]['new']['event_time'].split(':')[0],
+                                   query.data.split('_')[-1][1:])
                 UserEventAlterationMachine.set_state_of_user(user_id, 99)
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(
@@ -267,6 +290,7 @@ class EventHandler:
                 user_events[day] = events_for_day
                 DatabaseController.save_all_events_for_user(user_id, user_events)
                 query.edit_message_text(text=receive_translation("event_alteration_change_done", user_language))
+                EventHandler.events_in_alteration.pop(user_id)
                 UserEventAlterationMachine.set_state_of_user(user_id, 0)
 
     @staticmethod

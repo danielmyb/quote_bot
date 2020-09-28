@@ -56,8 +56,8 @@
     "EN": "Eventtype"
   },
   "event_start": {
-    "DE": "Start",
-    "EN": "Start"
+    "DE": "Startzeit",
+    "EN": "Starting time"
   },
   "event_pingtime":{
     "DE": "Erinnerungszeiten",
@@ -146,6 +146,14 @@
   "event_alteration_change_type": {
     "DE": "Bitte wähle die neue Terminart aus:",
     "EN": "Please select the new type for the event:"
+  },
+  "event_alteration_change_hours": {
+    "DE": "Bitte wähle für die neue Startzeit die Stunden:",
+    "EN": "Please select the hours for the new starting time:"
+  },
+  "event_alteration_change_minutes": {
+    "DE": "Bitte wähle für die neue Startzeit die Minuten:",
+    "EN": "Please select the minutes for the new starting time:"
   },
   "event_alteration_change_done": {
     "DE": "Änderungen gespeichert.",

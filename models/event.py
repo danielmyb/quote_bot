@@ -67,31 +67,40 @@ class Event:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def event_keyboard_hours():
+    def event_keyboard_hours(callback_prefix=""):
         """Generates the keyboard for hours.
+        Args:
+            callback_prefix (str): Prefix that is used to generate the callback data string.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
         keyboard = []
         for i in range(0, 24, 4):
-            keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="h{}".format(i)),
-                             InlineKeyboardButton("{}".format(i + 1), callback_data="h{}".format(i + 1)),
-                             InlineKeyboardButton("{}".format(i + 2), callback_data="h{}".format(i + 2)),
-                             InlineKeyboardButton("{}".format(i + 3), callback_data="h{}".format(i + 3))])
+            keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="{}h{}".format(callback_prefix, i)),
+                             InlineKeyboardButton("{}".format(i + 1),
+                                                  callback_data="{}h{}".format(callback_prefix, i + 1)),
+                             InlineKeyboardButton("{}".format(i + 2),
+                                                  callback_data="{}h{}".format(callback_prefix, i + 2)),
+                             InlineKeyboardButton("{}".format(i + 3),
+                                                  callback_data="{}h{}".format(callback_prefix, i + 3))])
 
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def event_keyboard_minutes():
+    def event_keyboard_minutes(callback_prefix=""):
         """Generates the keyboard for minutes.
+        Args:
+            callback_prefix (str): Prefix that is used to generate the callback data string.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
         # Remove 00 and 05 from loop so that the leading 0 can be shown.
-        keyboard = [[InlineKeyboardButton("00", callback_data="m00"), InlineKeyboardButton("05", callback_data="m05")]]
+        keyboard = [[InlineKeyboardButton("00", callback_data="{}m00".format(callback_prefix)),
+                     InlineKeyboardButton("05", callback_data="{}m05".format(callback_prefix))]]
         for i in range(15, 60, 10):
-            keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="m{}".format(i)),
-                             InlineKeyboardButton("{}".format(i + 5), callback_data="m{}".format(i + 5))])
+            keyboard.append([InlineKeyboardButton("{}".format(i), callback_data="{}m{}".format(callback_prefix, i)),
+                             InlineKeyboardButton("{}".format(i + 5),
+                                                  callback_data="{}m{}".format(callback_prefix, i + 5))])
 
         return InlineKeyboardMarkup(keyboard)
 
