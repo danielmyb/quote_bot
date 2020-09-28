@@ -44,3 +44,6 @@ class ValidStates(Enum):
     DAY = 2
     HOURS = 3
     MINUTES = 4
+
+    PING_TIMES_START = 10
+    PING_TIMES_SELECT = 11

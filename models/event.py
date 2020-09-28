@@ -14,18 +14,22 @@ from control.database_controller import DatabaseController
 from models.day import DayEnum
 from utils.localization_manager import receive_translation
 
+UNCHECKED_CHECKBOX = u'\U00002610'
+CHECKED_CHECKBOX = u'\U00002611'
+
 
 class Event:
     """Represents a single event."""
 
-    def __init__(self, name, content, event_type, event_time, ping_times=None):
+    def __init__(self, name, content, event_type, event_time, ping_times=None, in_daily_ping=True):
         """Constructor.
         Args:
             name (str): Name of the event.
             content (str): Content of the event.
             event_type (EventType): Type of the event, like singular.
             event_time (str): Time when the event is happening.
-            ping_times (list of 'str'): Timeslots when the user should be pinged for that event.
+            ping_times (list of 'str', optional): Timeslots when the user should be pinged for that event.
+            in_daily_ping (bool, optional): Determines whether this event is shown in the daily ping or not.
         """
         self.name = name
         self.content = content
@@ -34,7 +38,8 @@ class Event:
         if ping_times:
             self.ping_times = ping_times
         else:
-            self.ping_times = []
+            self.ping_times = {}
+        self.in_daily_ping = in_daily_ping
 
     @staticmethod
     def event_keyboard_type(user_language, callback_prefix=""):
@@ -171,6 +176,31 @@ class Event:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
+    def event_keyboard_ping_times(user_language, callback_prefix, states=None):
+        """Generates the event ping times keyboard.
+        Args:
+            user_language (str): Language that should be used.
+            callback_prefix (str): Prefix that is used to generate the callback data string.
+            states (dict, optional): States of the ping times.
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        if not states:
+            states = {"00:30": False, "01:00": False, "02:00": False, "04:00": False, "06:00": False, "12:00": False,
+                      "24:00": False}
+        keyboard = []
+        for state in states:
+            checkbox = UNCHECKED_CHECKBOX
+            if states[state]:
+                checkbox = CHECKED_CHECKBOX
+            keyboard.append([InlineKeyboardButton(text="{} {}".format(checkbox, state),
+                                                  callback_data="{}_ping_times_{}".format(callback_prefix, state))])
+
+        keyboard.append([InlineKeyboardButton(text=receive_translation("done", user_language),
+                                              callback_data="{}_ping_times_done".format(callback_prefix))])
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
     def event_keyboard_confirmation(user_language, callback_prefix):
         """Generates the event alteration delete confirmation keyboard.
         Args:
@@ -202,8 +232,13 @@ class Event:
         message += "*{}:* {}\n".format(receive_translation("event_type", user_language),
                                        self.event_type.receive_type_translation(user_language))
         message += "*{}:* {}\n".format(receive_translation("event_start", user_language), self.event_time)
+
+        ping_times_enabled = ""
         for ping_time in self.ping_times:
-            message += "*{}:* {}\n".format(receive_translation("event_pingtime", user_language), ping_time)
+            if self.ping_times[ping_time]:
+                ping_times_enabled += "{}\n".format(ping_time)
+        if ping_times_enabled:
+            message += "*{}:*\n{}".format(receive_translation("event_pingtime", user_language), ping_times_enabled)
         return message
 
 

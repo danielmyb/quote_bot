@@ -95,6 +95,10 @@
     "DE": "Die Minuten noch bitte!",
     "EN": "The minutes please!"
   },
+  "event_creation_ping_times_header": {
+    "DE": "Wie viele Stunden vor dem Termin möchtest du an ihn erinnert werden?",
+    "EN": "How many hours before the event you want to be notified?"
+  },
   "event_creation_finished": {
     "DE": "Vielen dank - dann bastel ich das mal zusammen.",
     "EN": "Thanks! - Now I will put this together ..."

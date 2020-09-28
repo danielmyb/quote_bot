@@ -112,18 +112,42 @@ class EventHandler:
             logging.info(query.data)
             if query.data[0] == 'm':
                 EventHandler.events_in_creation[user_id]["minutes"] = query.data[1:]
-                UserEventCreationMachine.set_state_of_user(user_id, -1)
+                UserEventCreationMachine.set_state_of_user(user_id, 10)
                 query.edit_message_text(text=receive_translation("event_creation_finished", user_language))
             else:
                 bot.send_message(user_id, text=receive_translation("event_creation_minutes", user_language),
                                  reply_markup=Event.event_keyboard_minutes())
+
+        # State: Start requesting ping times for the event - reset status.
+        if UserEventCreationMachine.receive_state_of_user(user_id) == 10:
+            ping_states = {"00:30": False, "01:00": False, "02:00": False, "04:00": False, "06:00": False,
+                           "12:00": False, "24:00": False}
+            EventHandler.events_in_creation[user_id]["ping_times"] = ping_states
+            query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
+                                    reply_markup=Event.event_keyboard_ping_times(user_language, "event_creation",
+                                                                                 ping_states))
+            UserEventCreationMachine.set_state_of_user(user_id, 11)
+
+        elif UserEventCreationMachine.receive_state_of_user(user_id) == 11:
+            if "ping_times" in query.data:
+                suffix = query.data.split('_')[-1]
+                if suffix == "done":
+                    UserEventCreationMachine.set_state_of_user(user_id, -1)
+                else:
+                    EventHandler.events_in_creation[user_id]["ping_times"][suffix] = \
+                        not EventHandler.events_in_creation[user_id]["ping_times"][suffix]
+                    query.edit_message_text(
+                        text=receive_translation("event_creation_ping_times_header", user_language),
+                        reply_markup=Event.event_keyboard_ping_times(
+                            user_language, "event_creation", EventHandler.events_in_creation[user_id]["ping_times"]))
 
         # State: All data collected - creating event
         if UserEventCreationMachine.receive_state_of_user(user_id) == -1:
             event_in_creation = EventHandler.events_in_creation[user_id]
             event = Event(event_in_creation["title"], event_in_creation["content"],
                           EventType(int(event_in_creation["type"])),
-                          "{}:{}".format(event_in_creation["hours"], event_in_creation["minutes"]))
+                          "{}:{}".format(event_in_creation["hours"], event_in_creation["minutes"]),
+                          event_in_creation["ping_times"])
             DatabaseController.save_day_event_data(user_id, event_in_creation["day"], event)
             UserEventCreationMachine.set_state_of_user(user_id, 0)
             EventHandler.events_in_creation.pop(user_id)
@@ -147,7 +171,7 @@ class EventHandler:
                 message += "{}\n\n".format(receive_translation("no_events", user.language))
             for event in event_data[day]:
                 event_object = Event(event["title"], event["content"], EventType(event["event_type"]),
-                                     event["event_time"])
+                                     event["event_time"], event["ping_times"])
                 message += event_object.pretty_print_formatting(user.telegram_user.id)
                 message += "\n"
 
@@ -320,6 +344,8 @@ class EventHandler:
                                                                      user_language))
                 elif query.data.split('_')[-1] == 'no':
                     query.edit_message_text(text=receive_translation("event_alteration_delete_aborted", user_language))
+
+                UserEventAlterationMachine.set_state_of_user(user_id, 0)
 
     @staticmethod
     def event_alteration_handle_reply(update, context):
