@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Model for days."""
+"""Contains utils for localization."""
 
 # ----------------------------------------------
 # Copyright: Daniel Bebber, 2020
