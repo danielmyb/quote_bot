@@ -44,6 +44,7 @@ class ValidStates(Enum):
     ALTER_CONTENT = 2
     ALTER_TYPE = 3
     ALTER_START_TIME = 4
+    AlTER_PING_TIMES = 5
 
     ALTER_NAME_REPLY = 11
     ALTER_CONTENT_REPLY = 12
@@ -51,6 +52,8 @@ class ValidStates(Enum):
 
     ALTER_START_TIME_HOURS = 41
     ALTER_START_TIME_MINUTES = 42
+
+    ALTER_PING_TIMES_SELECT = 51
 
     PARSE_CHOICE = 99
 

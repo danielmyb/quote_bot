@@ -170,6 +170,8 @@ class Event:
                                   callback_data="{}_type".format(callback_prefix))],
             [InlineKeyboardButton(receive_translation("event_start", user_language),
                                   callback_data="{}_start".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("event_pingtime", user_language),
+                                  callback_data="{}_pingtimes".format(callback_prefix))],
             [InlineKeyboardButton(receive_translation("done", user_language),
                                   callback_data="{}_done".format(callback_prefix))]
         ]

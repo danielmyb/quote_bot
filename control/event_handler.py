@@ -232,6 +232,8 @@ class EventHandler:
                     UserEventAlterationMachine.set_state_of_user(user_id, 3)
                 elif choice == "start":
                     UserEventAlterationMachine.set_state_of_user(user_id, 4)
+                elif choice == "pingtimes":
+                    UserEventAlterationMachine.set_state_of_user(user_id, 5)
                 elif choice == "done":
                     UserEventAlterationMachine.set_state_of_user(user_id, -1)
 
@@ -273,6 +275,14 @@ class EventHandler:
                                             callback_prefix="event_change_{}_hours_".format(event_suffix)))
                 UserEventAlterationMachine.set_state_of_user(user_id, 41)
 
+            # State: Ping times - Change ping times of event.
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 5:
+                query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
+                                        reply_markup=Event.event_keyboard_ping_times(
+                                            user_language, callback_prefix="event_change_{}".format(event_suffix),
+                                        states=EventHandler.events_in_alteration[user_id]["old"]["ping_times"]))
+                UserEventAlterationMachine.set_state_of_user(user_id, 51)
+
             # State: Alter event type
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 13:
                 EventHandler.events_in_alteration[user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
@@ -300,6 +310,22 @@ class EventHandler:
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(
                                             user_language, "event_change_{}".format(event_suffix)))
+
+            # State: Alter ping times - trigger chance on ping time
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 51:
+                toggle_data = query.data.split('_')[-1]
+                if toggle_data == 'done':
+                    UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                    query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
+                                            reply_markup=Event.event_keyboard_alteration_change_start(
+                                                user_language, "event_change_{}".format(event_suffix)))
+                else:
+                    EventHandler.events_in_alteration[user_id]["new"]["ping_times"][toggle_data] = \
+                        not EventHandler.events_in_alteration[user_id]["new"]["ping_times"][toggle_data]
+                    query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
+                                            reply_markup=Event.event_keyboard_ping_times(
+                                                user_language, callback_prefix="event_change_{}".format(event_suffix),
+                                            states=EventHandler.events_in_alteration[user_id]["new"]["ping_times"]))
 
             # State: Done - Save changes and delete temporary object.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == -1:
