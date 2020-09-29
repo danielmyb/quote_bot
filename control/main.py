@@ -84,7 +84,7 @@ def main():
     # Start the Bot
     updater.start_polling()
 
-    event_checker = EventChecker(updater)
+    event_checker = EventChecker()
     event_checker.check_events()
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,

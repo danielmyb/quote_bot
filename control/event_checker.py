@@ -26,12 +26,9 @@ logger = logging.getLogger(__name__)
 class EventChecker:
     """Checker for events."""
 
-    def __init__(self, updater):
+    def __init__(self):
         """Constructor."""
-        self.interval = None
-        self.user = None
 
-        self.updater = updater
         self.interval = DatabaseController.configuration['configuration_values']['event_checker']['interval']
 
     def check_events(self):
