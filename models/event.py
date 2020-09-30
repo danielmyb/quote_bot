@@ -41,6 +41,16 @@ class Event:
             self.ping_times = {}
         self.in_daily_ping = in_daily_ping
 
+    @property
+    def event_time_hours(self):
+        """Returns event hours"""
+        return int(self.event_time.split(":")[0])
+
+    @property
+    def event_time_minutes(self):
+        """Returns event minutes"""
+        return int(self.event_time.split(":")[1])
+
     @staticmethod
     def event_keyboard_type(user_language, callback_prefix=""):
         """Generates the keyboard for the event types.
