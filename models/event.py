@@ -21,7 +21,8 @@ CHECKED_CHECKBOX = u'\U00002611'
 class Event:
     """Represents a single event."""
 
-    def __init__(self, name, content, event_type, event_time, ping_times=None, in_daily_ping=True):
+    def __init__(self, name, content, event_type, event_time, ping_times=None, in_daily_ping=True,
+                 start_ping_done=False):
         """Constructor.
         Args:
             name (str): Name of the event.
@@ -30,6 +31,7 @@ class Event:
             event_time (str): Time when the event is happening.
             ping_times (list of 'str', optional): Timeslots when the user should be pinged for that event.
             in_daily_ping (bool, optional): Determines whether this event is shown in the daily ping or not.
+            start_ping_done (bool, optional): Determines whether the start ping of this event was already done or not.
         """
         self.name = name
         self.content = content
@@ -40,6 +42,7 @@ class Event:
         else:
             self.ping_times = {}
         self.in_daily_ping = in_daily_ping
+        self.start_ping_done = start_ping_done
 
     @property
     def event_time_hours(self):

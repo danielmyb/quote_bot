@@ -108,11 +108,12 @@ class DatabaseController:
         """Read the event data of a user for the given day with the given name.
         Args:
             user_id (int): ID of user.
-            day (int): Integer representation of the day.
+            day (int or str): Integer representation of the day.
             name (str): Name of the event.
         Returns:
             dict: Contains all data of the event.
         """
+        day = "{}".format(day)
         event_data = DatabaseController.read_event_data_of_user(user_id)
         for event in event_data[day]:
             if event['title'] == name:
@@ -127,6 +128,7 @@ class DatabaseController:
             day (int): Integer representation of the day.
             name (str): Name of the event.
         """
+        day = "{}".format(day)
         user_data = DatabaseController.read_event_data_of_user(user_id)
         event = DatabaseController.read_event_of_user(user_id, day, name)
         user_data[day].remove(event)
@@ -233,6 +235,7 @@ class DatabaseController:
                 event_entry["event_type"] = event["event_type"]
                 event_entry["event_time"] = event["event_time"]
                 event_entry["ping_times"] = event["ping_times"]
+                event_entry["start_ping_done"] = event.get("start_ping_done", False)
                 break
 
         DatabaseController._save_user_data(user_id, user_data)

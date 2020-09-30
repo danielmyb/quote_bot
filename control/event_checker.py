@@ -14,7 +14,6 @@ from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
-from models.event import EventType
 from utils.localization_manager import receive_translation
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,8 +44,7 @@ class EventChecker:
             # Use fresh userdata
             userdata = DatabaseController.load_all_events_from_all_users()
             self._ping_users(userdata, current_day)
-        # Trigger a cleanup
-        self.removed_passed_single_events(userdata)
+            self._refresh_start_pings(userdata, today)
         self.check_events()
 
     def _ping_users(self, userdata, day):
@@ -76,7 +74,7 @@ class EventChecker:
 
         ping_list = []
         for event in events:
-            if (not self.check_event_passed(event) or not today) and self.check_ping_needed(user_id, event, today):
+            if self.check_ping_needed(user_id, event, today):
                 ping_list.append(event)
 
         # Only ping if there are events to notify about
@@ -118,21 +116,31 @@ class EventChecker:
                     event["ping_times"][ping_time] = False
                     needs_ping = True
 
+        # Cleanup event if it is passed
+        if event_time < current_time and not event.get("start_ping_done", False):
+            needs_ping = True
+            if event["event_type"] == 1:
+                DatabaseController.delete_event_of_user(user_id, event_time.weekday(), event["title"])
+            else:
+                event["start_ping_done"] = True
+
         if needs_ping:
             # Save the changes on the event
-            logger.info(event_time)
             DatabaseController.save_changes_on_event(user_id, event_time.weekday(), event)
 
         return needs_ping
 
     @staticmethod
-    def check_event_passed(event):
+    def check_event_passed(event, today=True):
         """Checks if the given event is already passed.
         Args:
             event (dict): Contains an event.
+            today (bool, optional): Indicates whether today or tomorrow is checked.
         Returns:
             bool: Determines whether the event has passed or not.
         """
+        if not today:
+            return False
         event_hour, event_minute = event["event_time"].split(":")
         current_time = datetime.now()
         if int(event_hour) > current_time.hour or (int(event_hour) == current_time.hour and
@@ -160,30 +168,17 @@ class EventChecker:
 
         return message
 
-    def removed_passed_single_events(self, userdata):
-        """Removes passed non-regularly events from the event lists of all users.
+    @staticmethod
+    def _refresh_start_pings(userdata, day):
+        """Refreshes the "start ping done" booleans inside the user data for regularly events on the given day.
         Args:
-            userdata (dict): Contains all event data of all users.
+            userdata (dict): Contains all users and their events.
+            day (int): Day which should be refreshed.
         """
-        today = "{}".format(datetime.today().weekday())
+        day = "{}".format(day)
+        for user in userdata:
+            logger.info(userdata)
+            for event_data in userdata[user][day]:
+                event_data["start_ping_done"] = False
 
-        for user_id in userdata:
-            # Track that at least on change was done so that no useless database operation is called
-            at_least_one_change = False
-            days = userdata[user_id]
-            for day in days:
-                if day > today:
-                    break
-                for event in days[day]:
-                    # Do not remove regularly events
-                    if event["event_type"] == EventType.REGULARLY:
-                        continue
-                    if day < today:
-                        passed = True
-                    else:
-                        passed = self.check_event_passed(event)
-                    if passed:
-                        userdata[user_id][day].remove(event)
-                        at_least_one_change = True
-            if at_least_one_change:
-                DatabaseController.save_all_events_for_user(user_id, userdata[user_id])
+            DatabaseController.save_all_events_for_user(user, userdata[user])
