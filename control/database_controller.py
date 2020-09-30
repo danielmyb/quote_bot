@@ -13,7 +13,7 @@ import os
 
 from models.day import DayEnum
 from utils.localization_manager import DEFAULT_LANGUAGE
-from utils.path_utils import USERDATA_PATH, PROJECT_ROOT
+from utils.path_utils import USERDATA_PATH, CONFIG_PATH
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -24,10 +24,12 @@ logger = logging.getLogger(__name__)
 class DatabaseController:
 
     configuration = {}
+    config_file = CONFIG_PATH
 
-    def __init__(self):
+    def __init__(self, config_file=CONFIG_PATH):
         """Constructor."""
         DatabaseController.configuration = DatabaseController.load_configuration()
+        DatabaseController.config_file = config_file
 
     @staticmethod
     def load_configuration():
@@ -38,7 +40,7 @@ class DatabaseController:
         if DatabaseController.configuration:
             logger.info(DatabaseController.configuration)
             return DatabaseController.configuration
-        with open(os.path.join(PROJECT_ROOT, "configuration.json")) as configuration_file:
+        with open(DatabaseController.config_file) as configuration_file:
             json_content = json.load(configuration_file)
             logger.info(json_content)
             return json_content
