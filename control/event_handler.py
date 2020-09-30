@@ -18,6 +18,7 @@ from models.user import User
 from state_machines.user_event_alteration_machine import UserEventAlterationMachine
 from state_machines.user_event_creation_machine import UserEventCreationMachine
 from utils.localization_manager import receive_translation
+from utils.parsing_utils import replace_reserved_characters
 
 
 class EventHandler:
@@ -48,7 +49,8 @@ class EventHandler:
         user_language = DatabaseController.load_selected_language(user_id)
         if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
             return
-        EventHandler.events_in_creation[user_id]["title"] = update.message.text
+        title = replace_reserved_characters(update.message.text)
+        EventHandler.events_in_creation[user_id]["title"] = title
         update.message.reply_text(receive_translation("event_creation_content", user_language))
 
     @staticmethod
@@ -58,7 +60,8 @@ class EventHandler:
         user_language = DatabaseController.load_selected_language(user_id)
         if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
             return
-        EventHandler.events_in_creation[user_id]["content"] = update.message.text
+        content = replace_reserved_characters(update.message.text)
+        EventHandler.events_in_creation[user_id]["content"] = content
         update.message.reply_text(receive_translation("event_creation_type", user_language),
                                   reply_markup=Event.event_keyboard_type(user_language))
 
@@ -387,7 +390,8 @@ class EventHandler:
 
         # State: Alter name
         if state == 11:
-            EventHandler.events_in_alteration[user_id]['new']['title'] = update.message.text
+            title = replace_reserved_characters(update.message.text)
+            EventHandler.events_in_alteration[user_id]['new']['title'] = title
             UserEventAlterationMachine.set_state_of_user(user_id, 99)
             bot.send_message(user_id, text=receive_translation("event_alteration_change_decision", user_language),
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
@@ -396,7 +400,8 @@ class EventHandler:
 
         # State: Alter content
         elif state == 12:
-            EventHandler.events_in_alteration[user_id]['new']['content'] = update.message.text
+            content = replace_reserved_characters(update.message.text)
+            EventHandler.events_in_alteration[user_id]['new']['content'] = content
             UserEventAlterationMachine.set_state_of_user(user_id, 99)
             bot.send_message(user_id, text=receive_translation("event_alteration_change_decision", user_language),
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
