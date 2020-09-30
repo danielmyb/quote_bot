@@ -25,11 +25,13 @@ class DatabaseController:
 
     configuration = {}
     config_file = CONFIG_PATH
+    userdata_path = USERDATA_PATH
 
-    def __init__(self, config_file=CONFIG_PATH):
+    def __init__(self, config_file=CONFIG_PATH, userdata_path=USERDATA_PATH):
         """Constructor."""
-        DatabaseController.configuration = DatabaseController.load_configuration()
         DatabaseController.config_file = config_file
+        DatabaseController.userdata_path = userdata_path
+        DatabaseController.configuration = DatabaseController.load_configuration()
 
     @staticmethod
     def load_configuration():
@@ -55,7 +57,7 @@ class DatabaseController:
             dict: Data of the user as dict.
         """
         user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
+        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
 
         if not os.path.isfile(userdata_path):
             with open(userdata_path, "w") as userdata_file:
@@ -78,7 +80,7 @@ class DatabaseController:
             str: Code of the language.
         """
         user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
+        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
 
         with open(userdata_path, "r") as userdata_file:
             userdata = json.load(userdata_file)
@@ -100,7 +102,7 @@ class DatabaseController:
                                      "event_type": event.event_type.value, "event_time": event.event_time,
                                      "ping_times": event.ping_times}]
         user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(USERDATA_PATH, "{}.json".format(user_id_string))
+        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
 
         with open(userdata_path, "w") as userdata_file:
             json.dump(userdata, userdata_file)
@@ -155,7 +157,7 @@ class DatabaseController:
         Returns:
             dict: Contains all data of the user.
         """
-        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        userdata_file = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id))
         with open(userdata_file, "r") as userdata_content:
             content = json.load(userdata_content)
         return content
@@ -167,7 +169,7 @@ class DatabaseController:
             user_id (int): ID of the user whose data should be saved.
             content (dict): Contains the user data.
         """
-        userdata_file = os.path.join(USERDATA_PATH, "{}.json".format(user_id))
+        userdata_file = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id))
         with open(userdata_file, "w") as userdata_content:
             json.dump(content, userdata_content)
 
@@ -177,7 +179,7 @@ class DatabaseController:
         Returns:
             dict: Contains all events of all users.
         """
-        userdata_files = glob.glob("{}/*.json".format(USERDATA_PATH))
+        userdata_files = glob.glob("{}/*.json".format(DatabaseController.userdata_path))
         userdata = {}
         for userdata_file in userdata_files:
             with open(userdata_file, "r") as userdata_content:
