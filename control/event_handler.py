@@ -94,7 +94,7 @@ class EventHandler:
             if query.data[0] == 'd':
                 EventHandler.events_in_creation[user_id]["day"] = query.data[1:]
                 UserEventCreationMachine.set_state_of_user(user_id, 3)
-                query.edit_message_text(text=receive_translation("event_creation_hours", user_language))
+                bot.delete_message(user_id, query.message.message_id)
             else:
                 bot.send_message(user_id, text=receive_translation("event_creation_day", user_language),
                                  reply_markup=Event.event_keyboard_day(user_language))
@@ -105,7 +105,7 @@ class EventHandler:
             if query.data[0] == 'h':
                 EventHandler.events_in_creation[user_id]["hours"] = query.data[1:]
                 UserEventCreationMachine.set_state_of_user(user_id, 4)
-                query.edit_message_text(text=receive_translation("event_creation_minutes", user_language))
+                bot.delete_message(user_id, query.message.message_id)
             else:
                 bot.send_message(user_id, text=receive_translation("event_creation_hours", user_language),
                                  reply_markup=Event.event_keyboard_hours())
@@ -136,6 +136,7 @@ class EventHandler:
                 suffix = query.data.split('_')[-1]
                 if suffix == "done":
                     UserEventCreationMachine.set_state_of_user(user_id, -1)
+                    bot.delete_message(user_id, query.message.message_id)
                 else:
                     EventHandler.events_in_creation[user_id]["ping_times"][suffix] = \
                         not EventHandler.events_in_creation[user_id]["ping_times"][suffix]
