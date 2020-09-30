@@ -214,3 +214,25 @@ class DatabaseController:
         content = DatabaseController._read_user_data(user_id)
         content["daily_ping"] = daily_ping
         DatabaseController._save_user_data(user_id, content)
+
+    @staticmethod
+    def save_changes_on_event(user_id, day, event):
+        """Save changes on a single event of a user.
+        Args:
+            user_id (int): ID of the user.
+            day (int): Integer representation of the day.
+            event (dict): Event dict that should be saved.
+        """
+        user_data = DatabaseController._read_user_data(user_id)
+        day = "{}".format(day)
+        event_data = user_data["events"][day]
+
+        for event_entry in event_data:
+            if event_entry["title"] == event["title"]:
+                event_entry["content"] = event["content"]
+                event_entry["event_type"] = event["event_type"]
+                event_entry["event_time"] = event["event_time"]
+                event_entry["ping_times"] = event["ping_times"]
+                break
+
+        DatabaseController._save_user_data(user_id, user_data)
