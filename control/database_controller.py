@@ -95,7 +95,7 @@ class DatabaseController:
             day (int): Day of the event.
             event (Event): Event that should be saved.
         """
-        logger.info("%s %s %s", user_id, day, event)
+        day = "{}".format(day)
         userdata = DatabaseController.load_user_entry(user_id)
 
         userdata["events"][day] += [{"title": event.name, "content": event.content,
