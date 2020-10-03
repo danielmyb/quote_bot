@@ -49,10 +49,9 @@ class DatabaseController:
 
     @staticmethod
     def load_user_entry(user_id):
-        """
+        """Loads the user data entry of the given user.
         Args:
             user_id (int): ID of user.
-
         Returns:
             dict: Data of the user as dict.
         """
@@ -145,7 +144,7 @@ class DatabaseController:
         Args:
             user_id (int): ID of user.
         Returns:
-
+            dict: Event data of the user.
         """
         user_data = DatabaseController._read_user_data(user_id)
         return user_data["events"]
