@@ -135,8 +135,9 @@ class DatabaseController:
         day = "{}".format(day)
         user_data = DatabaseController.read_event_data_of_user(user_id)
         event = DatabaseController.read_event_of_user(user_id, day, name)
-        user_data[day].remove(event)
-        DatabaseController.save_all_events_for_user(user_id, user_data)
+        if event:
+            user_data[day].remove(event)
+            DatabaseController.save_all_events_for_user(user_id, user_data)
 
     @staticmethod
     def read_event_data_of_user(user_id):
