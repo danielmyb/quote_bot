@@ -21,7 +21,7 @@ class UserEventCreationMachine:
         Returns:
             int: State the user is currently in.
         """
-        if not UserEventCreationMachine.state_dict or not UserEventCreationMachine.state_dict[user_id]:
+        if not UserEventCreationMachine.state_dict or user_id not in UserEventCreationMachine.state_dict.keys():
             UserEventCreationMachine.state_dict[user_id] = 0
         return UserEventCreationMachine.state_dict[user_id]
 

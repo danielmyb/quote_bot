@@ -47,6 +47,7 @@ class EventChecker:
             self._ping_users(userdata, current_day)
 
         # Refresh pings of all events of yesterday
+        userdata = DatabaseController.load_all_events_from_all_users()
         self._refresh_start_pings(userdata, (datetime.today() - timedelta(days=1)).weekday())
 
         self.check_events()
@@ -143,6 +144,7 @@ class EventChecker:
             needs_ping = True
             if event["event_type"] == 1:
                 DatabaseController.delete_event_of_user(user_id, event_time.weekday(), event["title"])
+                logger.info("Deleted: %s", event)
                 event_deleted = True
             else:
                 event["start_ping_done"] = True
@@ -199,7 +201,7 @@ class EventChecker:
         """
         day = "{}".format(day)
         for user in userdata:
-            logger.info(userdata)
+            logger.info("Checking user data: %s | %s", user, userdata[user])
             for event_data in userdata[user][day]:
                 event_data["start_ping_done"] = False
 
