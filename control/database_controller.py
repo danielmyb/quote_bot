@@ -240,6 +240,7 @@ class DatabaseController:
                 event_entry["event_time"] = event["event_time"]
                 event_entry["ping_times"] = event["ping_times"]
                 event_entry["start_ping_done"] = event.get("start_ping_done", False)
+                event_entry["ping_times_to_refresh"] = event.get("ping_times_to_refresh", {})
                 break
 
         DatabaseController._save_user_data(user_id, user_data)

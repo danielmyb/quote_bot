@@ -14,7 +14,7 @@ from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
-from models.event import Event
+from models.event import Event, EventType
 from utils.localization_manager import receive_translation
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,7 +45,10 @@ class EventChecker:
             # Use fresh userdata
             userdata = DatabaseController.load_all_events_from_all_users()
             self._ping_users(userdata, current_day)
-            self._refresh_start_pings(userdata, today)
+
+        # Refresh pings of all events of yesterday
+        self._refresh_start_pings(userdata, (datetime.today() - timedelta(days=1)).weekday())
+
         self.check_events()
 
     def _ping_users(self, userdata, day):
@@ -90,7 +93,8 @@ class EventChecker:
                     language = DatabaseController.load_selected_language(user_id)
                     weekday = datetime.now().weekday() if today else (datetime.now() + timedelta(days=1)).weekday()
                     postfix = "_{}_{}".format(weekday, event['title'])
-                    bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
+                    bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
+                                     reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
 
     @staticmethod
     def check_ping_needed(user_id, event, today=True):
@@ -125,6 +129,12 @@ class EventChecker:
                 if event_time - delta < current_time:
                     event["ping_times"][ping_time] = False
                     needs_ping = True
+
+                    # Save ping times for regularly events
+                    if event["event_type"] == EventType.REGULARLY.value:
+                        if "ping_times_to_refresh" not in event.keys():
+                            event["ping_times_to_refresh"] = {}
+                        event["ping_times_to_refresh"][ping_time] = True
 
         event_deleted = False
 
@@ -192,5 +202,12 @@ class EventChecker:
             logger.info(userdata)
             for event_data in userdata[user][day]:
                 event_data["start_ping_done"] = False
+
+                # Restore ping times for regularly events
+                if event_data["event_type"] == EventType.REGULARLY.value and \
+                        "ping_times_to_refresh" in event_data.keys():
+                    for event_ping in event_data["ping_times_to_refresh"]:
+                        event_data["ping_times"][event_ping] = True
+                    event_data["ping_times_to_refresh"] = {}
 
             DatabaseController.save_all_events_for_user(user, userdata[user])
