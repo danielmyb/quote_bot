@@ -123,7 +123,7 @@ class Event:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def event_keyboard_alteration(user_language):
+    def event_keyboard_alteration(user_language, callback_prefix="event_alteration", callback_postfix=""):
         """Generates the keyboard for event alteration.
         Args:
             user_language (str): Language that should be used.
@@ -133,9 +133,9 @@ class Event:
         keyboard = [
             [
                 InlineKeyboardButton(receive_translation("event_alteration_change", user_language),
-                                     callback_data="event_alteration_change"),
+                                     callback_data="{}_change{}".format(callback_prefix, callback_postfix)),
                 InlineKeyboardButton(receive_translation("event_alteration_delete", user_language),
-                                     callback_data="event_alteration_delete")
+                                     callback_data="{}_delete{}".format(callback_prefix, callback_postfix))
             ]
         ]
         return InlineKeyboardMarkup(keyboard)

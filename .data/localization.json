@@ -164,7 +164,7 @@
     "EN": "Changes saved."
   },
   "event_alteration_delete_request_confirmation": {
-    "DE": "Möchtest du wirklich folgenden Termin löschen:",
+    "DE": "Möchtest du folgenden Termin wirklich löschen:",
     "EN": "Do you really want to delete the following event:"
   },
   "event_alteration_delete_confirmed": {

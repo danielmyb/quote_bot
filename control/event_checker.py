@@ -14,6 +14,7 @@ from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
+from models.event import Event
 from utils.localization_manager import receive_translation
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,13 +75,22 @@ class EventChecker:
 
         ping_list = []
         for event in events:
-            if self.check_ping_needed(user_id, event, today):
+            ping_needed, event_delete = self.check_ping_needed(user_id, event, today)
+            if ping_needed:
+                event['deleted'] = event_delete
                 ping_list.append(event)
 
         # Only ping if there are events to notify about
         if ping_list:
-            message = self.build_ping_message(user_id, ping_list)
-            bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
+            for event in ping_list:
+                message = self.build_ping_message(user_id, event)
+                if event['deleted']:
+                    bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
+                else:
+                    language = DatabaseController.load_selected_language(user_id)
+                    weekday = datetime.now().weekday() if today else (datetime.now() + timedelta(days=1)).weekday()
+                    postfix = "_{}_{}".format(weekday, event['title'])
+                    bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
 
     @staticmethod
     def check_ping_needed(user_id, event, today=True):
@@ -116,11 +126,14 @@ class EventChecker:
                     event["ping_times"][ping_time] = False
                     needs_ping = True
 
+        event_deleted = False
+
         # Cleanup event if it is passed
         if event_time < current_time and not event.get("start_ping_done", False):
             needs_ping = True
             if event["event_type"] == 1:
                 DatabaseController.delete_event_of_user(user_id, event_time.weekday(), event["title"])
+                event_deleted = True
             else:
                 event["start_ping_done"] = True
 
@@ -128,7 +141,7 @@ class EventChecker:
             # Save the changes on the event
             DatabaseController.save_changes_on_event(user_id, event_time.weekday(), event)
 
-        return needs_ping
+        return needs_ping, event_deleted
 
     @staticmethod
     def check_event_passed(event, today=True):
@@ -149,22 +162,21 @@ class EventChecker:
         return True
 
     @staticmethod
-    def build_ping_message(user_id, events):
+    def build_ping_message(user_id, event):
         """Generates the ping message for the user.
         Args:
             user_id (int): ID of the user - needed for localization.
-            events (list of 'dict'): Contains all events of a user for a given day that are not passed yet.
+            event (dict): Contains all events of a user for a given day that are not passed yet.
         Returns:
             str: Formatted message.
         """
         user_language = DatabaseController.load_selected_language(user_id)
         message = "*{}*\n\n".format(receive_translation("event_reminder", user_language))
 
-        for event in events:
-            message += "*{}:* {}\n".format(receive_translation("event", user_language), event["title"])
-            message += "*{}:* {}\n".format(receive_translation("event_content", user_language), event["content"])
-            message += "*{}:* {}\n".format(receive_translation("event_start", user_language), event["event_time"])
-            message += "\n"
+        message += "*{}:* {}\n".format(receive_translation("event", user_language), event["title"])
+        message += "*{}:* {}\n".format(receive_translation("event_content", user_language), event["content"])
+        message += "*{}:* {}\n".format(receive_translation("event_start", user_language), event["event_time"])
+        message += "\n"
 
         return message
 
