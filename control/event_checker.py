@@ -206,8 +206,7 @@ class EventChecker:
                 event_data["start_ping_done"] = False
 
                 # Restore ping times for regularly events
-                if event_data["event_type"] == EventType.REGULARLY.value and \
-                        "ping_times_to_refresh" in event_data.keys():
+                if "ping_times_to_refresh" in event_data.keys():
                     for event_ping in event_data["ping_times_to_refresh"]:
                         event_data["ping_times"][event_ping] = True
                     event_data["ping_times_to_refresh"] = {}

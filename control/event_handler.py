@@ -7,13 +7,14 @@
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
 import logging
+from datetime import datetime
 
 from telegram import ParseMode
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
 from models.day import DayEnum
-from models.event import Event, EventType
+from models.event import Event, EventType, DEFAULT_PING_STATES
 from models.user import User
 from state_machines.user_event_alteration_machine import UserEventAlterationMachine
 from state_machines.user_event_creation_machine import UserEventCreationMachine
@@ -78,7 +79,7 @@ class EventHandler:
 
         # State: Requesting event type
         if UserEventCreationMachine.receive_state_of_user(user_id) == 1:
-            EventHandler.events_in_creation[user_id]["type"] = query.data
+            EventHandler.events_in_creation[user_id]["event_type"] = int(query.data)
             if query.data == "{}".format(EventType.SINGLE.value):
                 message = receive_translation("event_creation_type_single", user_language)
             elif query.data == "{}".format(EventType.REGULARLY.value):
@@ -114,7 +115,8 @@ class EventHandler:
         if UserEventCreationMachine.receive_state_of_user(user_id) == 4:
             logging.info(query.data)
             if query.data[0] == 'm':
-                EventHandler.events_in_creation[user_id]["minutes"] = query.data[1:]
+                EventHandler.events_in_creation[user_id]["event_time"] = \
+                    "{}:{}".format(EventHandler.events_in_creation[user_id]["hours"], query.data[1:])
                 UserEventCreationMachine.set_state_of_user(user_id, 10)
                 query.edit_message_text(text=receive_translation("event_creation_finished", user_language))
             else:
@@ -123,8 +125,7 @@ class EventHandler:
 
         # State: Start requesting ping times for the event - reset status.
         if UserEventCreationMachine.receive_state_of_user(user_id) == 10:
-            ping_states = {"00:30": False, "01:00": False, "02:00": False, "04:00": False, "06:00": False,
-                           "12:00": False, "24:00": False}
+            ping_states = DEFAULT_PING_STATES.copy()
             EventHandler.events_in_creation[user_id]["ping_times"] = ping_states
             query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
                                     reply_markup=Event.event_keyboard_ping_times(user_language, "event_creation",
@@ -149,12 +150,26 @@ class EventHandler:
         if UserEventCreationMachine.receive_state_of_user(user_id) == -1:
             event_in_creation = EventHandler.events_in_creation[user_id]
             event = Event(event_in_creation["title"], event_in_creation["content"],
-                          EventType(int(event_in_creation["type"])),
-                          "{}:{}".format(event_in_creation["hours"], event_in_creation["minutes"]),
+                          EventType(event_in_creation["event_type"]), event_in_creation["event_time"],
                           event_in_creation["ping_times"])
             DatabaseController.save_day_event_data(user_id, event_in_creation["day"], event)
             UserEventCreationMachine.set_state_of_user(user_id, 0)
             EventHandler.events_in_creation.pop(user_id)
+
+            # Needed because when an event is created on the current day but has already passed there
+            # would be pings for it.
+            event_hour, event_minute = event.event_time.split(":")
+            current_time = datetime.now()
+            if int(event_in_creation["day"]) == current_time.weekday() and int(event_hour) < current_time.hour or \
+                    (int(event_hour) == current_time.hour and int(event_minute) < current_time.minute):
+                event_in_creation["start_ping_done"] = True
+                event_in_creation["ping_times_to_refresh"] = {}
+                for ping_time in event.ping_times:
+                    if event.ping_times[ping_time]:
+                        event_in_creation["ping_times_to_refresh"][ping_time] = True
+
+                event_in_creation["ping_times"] = DEFAULT_PING_STATES.copy()
+                DatabaseController.save_changes_on_event(user_id, event_in_creation["day"], event_in_creation)
 
             message = receive_translation("event_creation_summary_header", user_language)
             message += event.pretty_print_formatting(user_id)
