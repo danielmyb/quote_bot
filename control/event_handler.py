@@ -167,18 +167,23 @@ class EventHandler:
 
         message = "*{}:*\n\n".format(receive_translation("event_list_header", user.language))
         event_data = DatabaseController.read_event_data_of_user(user.telegram_user.id)
+        has_content = False
 
         for day in event_data:
+            if not event_data[day]:
+                continue
+
+            has_content = True
             message += "*{}:*\n".format(DayEnum(int(day)).receive_day_translation(user.language))
 
-            if not event_data[day]:
-                message += "{}\n\n".format(receive_translation("no_events", user.language))
             for event in event_data[day]:
                 event_object = Event(event["title"], event["content"], EventType(event["event_type"]),
                                      event["event_time"], event["ping_times"])
                 message += event_object.pretty_print_formatting(user.telegram_user.id)
                 message += "\n"
 
+        if not has_content:
+            message += "{}".format(receive_translation("no_events", user.language))
         bot = BotControl.get_bot()
         bot.send_message(user.telegram_user.id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
                          reply_markup=Event.event_keyboard_alteration(user.language))

@@ -28,8 +28,8 @@
     "EN": "Something went wrong ... Sorry"
   },
   "help": {
-    "DE": "Hier könnte ihre *Hilfe* stehen\\!\nEcht jetzt",
-    "EN": "You *help* could stand here\\!\nSeriously"
+    "DE": "*RemindEasy* \\- Verpasse niemals mehr deine Termine\\!\n\nFolgende Befehle stehen zur Verfügung:\n/config \\- Passe deine persönlichen Einstellungen an\n/new\\_event \\- Erstelle einen neuen Termin\n/list\\_events \\- Liste alle von dir erstellten Termine auf\n/help \\- Zeige diese Hilfe",
+    "EN": "*RemindEasy* \\- Never again forget your events\\!\n\nThe following commands are available:\n/config \\- Adjust your personal settings\n/new\\_event \\- Create a new event\n/list\\_events \\- List all events you have created\n/help \\- Show this help"
   },
   "event": {
     "DE": "Termin",
