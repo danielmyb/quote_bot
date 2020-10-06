@@ -17,6 +17,10 @@ from utils.localization_manager import receive_translation
 UNCHECKED_CHECKBOX = u'\U00002610'
 CHECKED_CHECKBOX = u'\U00002611'
 
+# Needs to be copied or else states will be saved.
+DEFAULT_PING_STATES = {"00:30": False, "01:00": False, "02:00": False, "04:00": False, "06:00": False,
+                       "12:00": False, "24:00": False}
+
 
 class Event:
     """Represents a single event."""
