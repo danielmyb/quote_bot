@@ -257,6 +257,8 @@ class EventHandler:
                     UserEventAlterationMachine.set_state_of_user(user_id, 4)
                 elif choice == "pingtimes":
                     UserEventAlterationMachine.set_state_of_user(user_id, 5)
+                elif choice == "day":
+                    UserEventAlterationMachine.set_state_of_user(user_id, 6)
                 elif choice == "done":
                     UserEventAlterationMachine.set_state_of_user(user_id, -1)
 
@@ -306,9 +308,24 @@ class EventHandler:
                                             states=EventHandler.events_in_alteration[user_id]["old"]["ping_times"]))
                 UserEventAlterationMachine.set_state_of_user(user_id, 51)
 
+            # State: Day - Change day of event.
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 6:
+                query.edit_message_text(text=receive_translation("event_creation_day", user_language),
+                                        reply_markup=Event.event_keyboard_day(
+                                            user_language, callback_prefix="event_change_{}_".format(event_id)))
+                UserEventAlterationMachine.set_state_of_user(user_id, 16)
+
             # State: Alter event type
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == 13:
                 EventHandler.events_in_alteration[user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
+                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
+                                        reply_markup=Event.event_keyboard_alteration_change_start(
+                                            user_language, "event_change_{}".format(event_id)))
+
+            # State: Alter event day
+            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 16:
+                EventHandler.events_in_alteration[user_id]['new']['day'] = int(query.data.split('_')[-1][1])
                 UserEventAlterationMachine.set_state_of_user(user_id, 99)
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(

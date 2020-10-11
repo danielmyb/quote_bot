@@ -80,17 +80,18 @@ class Event:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def event_keyboard_day(user_language):
+    def event_keyboard_day(user_language, callback_prefix=""):
         """Generates the keyboard for days.
         Args:
             user_language (str): Language that should be used.
+            callback_prefix (str, optional): Prefix that should be used for the callback data parameter.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
         keyboard = []
         for day in DayEnum:
             keyboard.append([InlineKeyboardButton("{}".format(day.receive_day_translation(user_language)),
-                                                  callback_data="d{}".format(day.value))])
+                                                  callback_data="{}d{}".format(callback_prefix, day.value))])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -192,6 +193,8 @@ class Event:
                                   callback_data="{}_content".format(callback_prefix))],
             [InlineKeyboardButton(receive_translation("event_type", user_language),
                                   callback_data="{}_type".format(callback_prefix))],
+            [InlineKeyboardButton(receive_translation("event_day", user_language),
+                                  callback_data="{}_day".format(callback_prefix))],
             [InlineKeyboardButton(receive_translation("event_start", user_language),
                                   callback_data="{}_start".format(callback_prefix))],
             [InlineKeyboardButton(receive_translation("event_pingtime", user_language),

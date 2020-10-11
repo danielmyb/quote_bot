@@ -55,6 +55,10 @@
     "DE": "Terminart",
     "EN": "Eventtype"
   },
+  "event_day": {
+    "DE": "Tag",
+    "EN": "Day"
+  },
   "event_start": {
     "DE": "Startzeit",
     "EN": "Starting time"
