@@ -161,14 +161,15 @@ class Event:
             InlineKeyboardMarkup: Generated keyboard.
         """
         keyboard = []
-        for day in events:
+        for day in DayEnum:
             keyboard_day = []
-            for event in events[day]:
-                title = event["title"]
+            events_day = [event for event in events if event.day == day]
+            for event in events_day:
+                title = event.name
                 event_description = "{} ({}: {})".format(
-                    title, DayEnum(int(day)).receive_day_translation(user_language), event["event_time"])
+                    title, day.receive_day_translation(user_language), event.event_time)
                 keyboard_day.append(
-                    InlineKeyboardButton(event_description, callback_data="event_{}_{}_{}".format(mode, day, title))
+                    InlineKeyboardButton(event_description, callback_data="event_{}_{}".format(mode, event.uuid))
                 )
             if keyboard_day:
                 keyboard.append(keyboard_day)
