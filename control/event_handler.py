@@ -37,7 +37,7 @@ class EventHandler:
         """Reply to the /new_event command. Created the event in creation entry for the requesting user and starts the
         event creation cycle.
         """
-        user = User(update.message.from_user)
+        user = User(update.message.from_user.id, update.message.from_user)
         UserEventCreationMachine.set_state_of_user(user.telegram_user.id, 1)
         EventHandler.events_in_creation[user.telegram_user.id] = {}
         update.message.reply_text(receive_translation("event_creation_start", user.language)
@@ -149,10 +149,10 @@ class EventHandler:
         # State: All data collected - creating event
         if UserEventCreationMachine.receive_state_of_user(user_id) == -1:
             event_in_creation = EventHandler.events_in_creation[user_id]
-            event = Event(event_in_creation["title"], event_in_creation["content"],
+            event = Event(event_in_creation["title"], DayEnum(int(event_in_creation["day"])), event_in_creation["content"],
                           EventType(event_in_creation["event_type"]), event_in_creation["event_time"],
                           event_in_creation["ping_times"])
-            DatabaseController.save_day_event_data(user_id, event_in_creation["day"], event)
+            DatabaseController.save_event_data_user(user_id, event)
             UserEventCreationMachine.set_state_of_user(user_id, 0)
             EventHandler.events_in_creation.pop(user_id)
 
@@ -162,23 +162,23 @@ class EventHandler:
             current_time = datetime.now()
             if int(event_in_creation["day"]) == current_time.weekday() and int(event_hour) < current_time.hour or \
                     (int(event_hour) == current_time.hour and int(event_minute) < current_time.minute):
-                event_in_creation["start_ping_done"] = True
-                event_in_creation["ping_times_to_refresh"] = {}
+                event.start_ping_done = True
+                event.ping_times_to_refresh = {}
                 for ping_time in event.ping_times:
                     if event.ping_times[ping_time]:
-                        event_in_creation["ping_times_to_refresh"][ping_time] = True
+                        event.ping_times_to_refresh[ping_time] = True
 
-                event_in_creation["ping_times"] = DEFAULT_PING_STATES.copy()
-                DatabaseController.save_changes_on_event(user_id, event_in_creation["day"], event_in_creation)
+                event.ping_times = DEFAULT_PING_STATES.copy()
+                DatabaseController.save_event_data_user(user_id, event)
 
             message = receive_translation("event_creation_summary_header", user_language)
-            message += event.pretty_print_formatting(user_id)
+            message += event.pretty_print_formatting(user_language)
             bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
 
     @staticmethod
     def list_all_events_of_user(update, context):
         """Lists all events of the user."""
-        user = User(update.message.from_user)
+        user = User(update.message.from_user.id, update.message.from_user)
 
         message = "*{}:*\n\n".format(receive_translation("event_list_header", user.language))
         event_data = DatabaseController.read_event_data_of_user(user.telegram_user.id)
@@ -192,9 +192,9 @@ class EventHandler:
             message += "*{}:*\n".format(DayEnum(int(day)).receive_day_translation(user.language))
 
             for event in event_data[day]:
-                event_object = Event(event["title"], event["content"], EventType(event["event_type"]),
-                                     event["event_time"], event["ping_times"])
-                message += event_object.pretty_print_formatting(user.telegram_user.id)
+                event_object = Event(event["title"], DayEnum(event['day']), event["content"],
+                                     EventType(event["event_type"]), event["event_time"], event["ping_times"])
+                message += event_object.pretty_print_formatting(user.language)
                 message += "\n"
 
         if not has_content:
@@ -304,7 +304,7 @@ class EventHandler:
                 query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
                                         reply_markup=Event.event_keyboard_ping_times(
                                             user_language, callback_prefix="event_change_{}".format(event_suffix),
-                                        states=EventHandler.events_in_alteration[user_id]["old"]["ping_times"]))
+                                            states=EventHandler.events_in_alteration[user_id]["old"]["ping_times"]))
                 UserEventAlterationMachine.set_state_of_user(user_id, 51)
 
             # State: Alter event type
@@ -349,7 +349,7 @@ class EventHandler:
                     query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
                                             reply_markup=Event.event_keyboard_ping_times(
                                                 user_language, callback_prefix="event_change_{}".format(event_suffix),
-                                            states=EventHandler.events_in_alteration[user_id]["new"]["ping_times"]))
+                                                states=EventHandler.events_in_alteration[user_id]["new"]["ping_times"]))
 
             # State: Done - Save changes and delete temporary object.
             elif UserEventAlterationMachine.receive_state_of_user(user_id) == -1:
@@ -376,10 +376,10 @@ class EventHandler:
                 message += "\n"
 
                 event_data = DatabaseController.read_event_of_user(user_id, event_day, event_name)
-                event = Event(event_name, event_data['content'], EventType(event_data['event_type']),
-                              event_data['event_time'])
+                event = Event(event_name, DayEnum(event_data['day']), event_data['content'],
+                              EventType(event_data['event_type']), event_data['event_time'])
 
-                message += event.pretty_print_formatting(user_id)
+                message += event.pretty_print_formatting(user_language)
 
                 query.edit_message_text(text=message, reply_markup=Event.event_keyboard_confirmation(
                     user_language, "event_delete_{}".format(event_suffix)), parse_mode=ParseMode.MARKDOWN_V2)

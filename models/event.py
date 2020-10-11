@@ -10,7 +10,6 @@ from enum import Enum
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from control.database_controller import DatabaseController
 from models.day import DayEnum
 from utils.localization_manager import receive_translation
 
@@ -25,11 +24,12 @@ DEFAULT_PING_STATES = {"00:30": False, "01:00": False, "02:00": False, "04:00": 
 class Event:
     """Represents a single event."""
 
-    def __init__(self, name, content, event_type, event_time, ping_times=None, in_daily_ping=True,
+    def __init__(self, name, day, content, event_type, event_time, ping_times=None, in_daily_ping=True,
                  start_ping_done=False):
         """Constructor.
         Args:
             name (str): Name of the event.
+            day (DayEnum): Weekday when the event is happening.
             content (str): Content of the event.
             event_type (EventType): Type of the event, like singular.
             event_time (str): Time when the event is happening.
@@ -37,7 +37,9 @@ class Event:
             in_daily_ping (bool, optional): Determines whether this event is shown in the daily ping or not.
             start_ping_done (bool, optional): Determines whether the start ping of this event was already done or not.
         """
+        self.uuid = None
         self.name = name
+        self.day = day
         self.content = content
         self.event_type = event_type
         self.event_time = event_time
@@ -47,6 +49,10 @@ class Event:
             self.ping_times = {}
         self.in_daily_ping = in_daily_ping
         self.start_ping_done = start_ping_done
+
+        self.ping_times_to_refresh = {}
+
+        self.deleted = False
 
     @property
     def event_time_hours(self):
@@ -238,14 +244,13 @@ class Event:
         ]
         return InlineKeyboardMarkup(keyboard)
 
-    def pretty_print_formatting(self, user_id):
+    def pretty_print_formatting(self, user_language):
         """Collects all data about an event and returns a pretty printed version.
         Args:
-            user_id (int): ID of the user - needed for localization.
+            user_language (str): Code of the language of the user.
         Returns:
             str: Pretty formatted event information.
         """
-        user_language = DatabaseController.load_selected_language(user_id)
         message = "*{}:* {}\n".format(receive_translation("event_name", user_language), self.name)
         message += "*{}:* {}\n".format(receive_translation("event_content", user_language), self.content)
         message += "*{}:* {}\n".format(receive_translation("event_type", user_language),

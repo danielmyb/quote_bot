@@ -32,20 +32,20 @@ db_controller = DatabaseController()
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
-    user = User(update.message.from_user)
+    user = User(update.message.from_user.id, update.message.from_user)
     update.message.reply_text(
         receive_translation("greeting", user.language).format(USERNAME=user.telegram_user.first_name))
 
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
-    user = User(update.message.from_user)
+    user = User(update.message.from_user.id, update.message.from_user)
     update.message.reply_markdown_v2(receive_translation("help", user.language))
 
 
 def parse_input(update, context):
     """Echo the user message."""
-    user = User(update.message.from_user)
+    user = User(update.message.from_user.id, update.message.from_user)
     user_id = user.telegram_user.id
     if UserEventCreationMachine.receive_state_of_user(user_id) == 1:
         if user_id in EventHandler.events_in_creation.keys() and not EventHandler.events_in_creation[user_id]:
