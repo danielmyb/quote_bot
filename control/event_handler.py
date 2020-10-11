@@ -149,7 +149,8 @@ class EventHandler:
         # State: All data collected - creating event
         if UserEventCreationMachine.receive_state_of_user(user_id) == -1:
             event_in_creation = EventHandler.events_in_creation[user_id]
-            event = Event(event_in_creation["title"], DayEnum(int(event_in_creation["day"])), event_in_creation["content"],
+            event = Event(event_in_creation["title"], DayEnum(int(event_in_creation["day"])),
+                          event_in_creation["content"],
                           EventType(event_in_creation["event_type"]), event_in_creation["event_time"],
                           event_in_creation["ping_times"])
             DatabaseController.save_event_data_user(user_id, event)
@@ -181,20 +182,20 @@ class EventHandler:
         user = User(update.message.from_user.id, update.message.from_user)
 
         message = "*{}:*\n\n".format(receive_translation("event_list_header", user.language))
-        event_data = DatabaseController.read_event_data_of_user(user.telegram_user.id)
+        event_data = DatabaseController.load_user_events(user.telegram_user.id)
         has_content = False
 
-        for day in event_data:
-            if not event_data[day]:
+        for day in DayEnum:
+            events = [event for event in event_data if event.day == day]
+
+            if not events:
                 continue
 
             has_content = True
-            message += "*{}:*\n".format(DayEnum(int(day)).receive_day_translation(user.language))
+            message += "*{}:*\n".format(day.receive_day_translation(user.language))
 
-            for event in event_data[day]:
-                event_object = Event(event["title"], DayEnum(event['day']), event["content"],
-                                     EventType(event["event_type"]), event["event_time"], event["ping_times"])
-                message += event_object.pretty_print_formatting(user.language)
+            for event in events:
+                message += event.pretty_print_formatting(user.language)
                 message += "\n"
 
         if not has_content:

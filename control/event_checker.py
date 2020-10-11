@@ -137,7 +137,6 @@ class EventChecker:
         event_deleted = False
 
         # Cleanup event if it is passed
-        logger.info("ET %s CT %s SPD %s", event_time, current_time, event.start_ping_done)
         if event_time < current_time and not event.start_ping_done:
             needs_ping = True
             if event.event_type == EventType.SINGLE:
