@@ -163,47 +163,30 @@ class DatabaseController:
             json.dump(user_event_data, user_event_data_file)
 
     @staticmethod
-    def read_event_of_user(user_id, day, name):
+    def read_event_of_user(user_id, event_id):
         """Read the event data of a user for the given day with the given name.
         Args:
             user_id (int): ID of user.
-            day (int or str): Integer representation of the day.
-            name (str): Name of the event.
+            event_id (str): ID of the event.
         Returns:
             dict: Contains all data of the event.
         """
-        day = "{}".format(day)
-        event_data = DatabaseController.load_user_events(user_id)
-        for event in event_data[day]:
-            if event['title'] == name:
-                return event
+        user_events = DatabaseController._load_user_event_entry(user_id)
+        if user_events[event_id]:
+            return user_events[event_id]
         return None
 
     @staticmethod
-    def delete_event_of_user(user_id, day, name):
+    def delete_event_of_user(user_id, event_id):
         """Removes the event with the given name from the given user on the given day.
         Args:
             user_id (int): ID of user.
-            day (int): Integer representation of the day.
-            name (str): Name of the event.
+            event_id (str): ID of the event.
         """
-        day = "{}".format(day)
-        user_data = DatabaseController.read_event_data_of_user(user_id)
-        event = DatabaseController.read_event_of_user(user_id, day, name)
-        if event:
-            user_data[day].remove(event)
-            DatabaseController.save_all_events_for_user(user_id, user_data)
-
-    @staticmethod
-    def read_event_data_of_user(user_id):
-        """Reads the event data of a given user.
-        Args:
-            user_id (int): ID of user.
-        Returns:
-            dict: Event data of the user.
-        """
-        user_data = DatabaseController._read_user_data(user_id)
-        return user_data["events"]
+        event_data = DatabaseController._load_user_event_entry(user_id)
+        if event_data[event_id]:
+            event_data.pop(event_id)
+            DatabaseController._save_event_data_user(user_id, event_data)
 
     @staticmethod
     def _read_user_data(user_id):
@@ -213,7 +196,7 @@ class DatabaseController:
         Returns:
             dict: Contains all data of the user.
         """
-        userdata_file = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id))
+        userdata_file = os.path.join(DatabaseController.userdata_path, "{}_config.json".format(user_id))
         with open(userdata_file, "r") as userdata_content:
             content = json.load(userdata_content)
         return content
@@ -225,7 +208,7 @@ class DatabaseController:
             user_id (int): ID of the user whose data should be saved.
             content (dict): Contains the user data.
         """
-        userdata_file = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id))
+        userdata_file = os.path.join(DatabaseController.userdata_path, "{}_config.json".format(user_id))
         with open(userdata_file, "w") as userdata_content:
             json.dump(content, userdata_content)
 
@@ -241,17 +224,6 @@ class DatabaseController:
                  user_data_config_files]
 
         return users
-
-    @staticmethod
-    def save_all_events_for_user(user_id, event_data):
-        """Saves all events for a given user.
-        Args:
-            user_id (int): ID of the user.
-            event_data (dict): Contains the event data of a user.
-        """
-        content = DatabaseController._read_user_data(user_id)
-        content["events"] = event_data
-        DatabaseController._save_user_data(user_id, content)
 
     @staticmethod
     def save_user_language(user_id, language):

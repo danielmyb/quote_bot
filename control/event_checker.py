@@ -93,7 +93,7 @@ class EventChecker:
                 else:
                     language = DatabaseController.load_selected_language(user_id)
                     weekday = datetime.now().weekday() if today else (datetime.now() + timedelta(days=1)).weekday()
-                    postfix = "_{}_{}".format(weekday, event.name)
+                    postfix = "_{}".format(event.uuid)
                     bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
                                      reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
 
