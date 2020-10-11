@@ -63,6 +63,10 @@
     "DE": "Startzeit",
     "EN": "Starting time"
   },
+  "event_before": {
+    "DE": "Stunden davor",
+    "EN": "Hours before"
+  },
   "event_pingtime":{
     "DE": "Erinnerungszeiten",
     "EN": "Pingtimes"

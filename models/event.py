@@ -6,6 +6,7 @@
 # Copyright: Daniel Bebber, 2020
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
+from datetime import datetime, timedelta
 from enum import Enum
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -262,9 +263,16 @@ class Event:
         message += "*{}:* {}\n".format(receive_translation("event_start", user_language), self.event_time)
 
         ping_times_enabled = ""
+        current_time = datetime.now()
+        start_time = datetime(current_time.year, current_time.month, current_time.day, self.event_time_hours,
+                              self.event_time_minutes)
         for ping_time in self.ping_times:
             if self.ping_times[ping_time]:
-                ping_times_enabled += "{}\n".format(ping_time)
+                ping_time_delta = timedelta(hours=int(ping_time.split(":")[0]), minutes=int(ping_time.split(":")[1]))
+                ping_time_real = start_time - ping_time_delta
+                ping_times_enabled += "{}:{} \\- \\({} {}\\)\n".format(
+                    ping_time_real.hour, ping_time_real.minute, ping_time,
+                    receive_translation("event_before", user_language))
         if ping_times_enabled:
             message += "*{}:*\n{}".format(receive_translation("event_pingtime", user_language), ping_times_enabled)
         return message
