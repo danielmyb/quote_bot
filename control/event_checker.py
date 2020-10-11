@@ -131,7 +131,7 @@ class EventChecker:
                     needs_ping = True
 
                     # Save ping times for regularly events
-                    if event.event_type == EventType.REGULARLY.value:
+                    if event.event_type == EventType.REGULARLY:
                         event.ping_times_to_refresh[ping_time] = True
 
         event_deleted = False
@@ -140,7 +140,7 @@ class EventChecker:
         if event_time < current_time and not event.start_ping_done:
             needs_ping = True
             if event.event_type == EventType.SINGLE:
-                DatabaseController.delete_event_of_user(user_id, event_time.weekday(), event.name)
+                DatabaseController.delete_event_of_user(user_id, event.uuid)
                 event_deleted = True
             else:
                 event.start_ping_done = True
