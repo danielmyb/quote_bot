@@ -32,7 +32,8 @@ class UserEventAlterationMachine:
             user_id (int): ID of the user.
             state (int): State the user should be in.
         """
-        # TODO: Add check for valid state
+        if not ValidStates.has_value(state):
+            raise RuntimeError("Invalid event alteration state reached")
         UserEventAlterationMachine.state_dict[user_id] = state
 
 
@@ -61,3 +62,11 @@ class ValidStates(Enum):
     PARSE_CHOICE = 99
 
     DELETE_CONFIRMATION = 101
+
+    @classmethod
+    def has_value(cls, value):
+        """Checks if the value is a valid state
+        Returns:
+            bool: Indicates the validity of the value.
+        """
+        return value in [item.value for item in cls]
