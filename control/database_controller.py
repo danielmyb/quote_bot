@@ -10,8 +10,10 @@ import glob
 import json
 import logging
 import os
+import uuid
 
 from models.day import DayEnum
+from models.event import Event, EventType
 from utils.localization_manager import DEFAULT_LANGUAGE
 from utils.path_utils import USERDATA_PATH, CONFIG_PATH
 
@@ -22,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseController:
-
     configuration = {}
     config_file = CONFIG_PATH
     userdata_path = USERDATA_PATH
@@ -48,27 +49,67 @@ class DatabaseController:
             return json_content
 
     @staticmethod
-    def load_user_entry(user_id):
-        """Loads the user data entry of the given user.
+    def load_user_config(user_id):
+        """Loads the user config entry of the given user.
         Args:
             user_id (int): ID of user.
         Returns:
-            dict: Data of the user as dict.
+            dict: Config of the user as dict.
         """
-        user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
+        user_id_string = str(user_id)
+        user_config_path = os.path.join(DatabaseController.userdata_path, "{}_config.json".format(user_id_string))
 
-        if not os.path.isfile(userdata_path):
-            with open(userdata_path, "w") as userdata_file:
-                user_dict = {"user_id": user_id, "language": DEFAULT_LANGUAGE, "events": {}}
-                for day in DayEnum:
-                    user_dict["events"][day.value] = []
-                json.dump(user_dict, userdata_file)
+        if not os.path.isfile(user_config_path):
+            with open(user_config_path, "w") as user_config_file:
+                user_config_dict = {"user_id": user_id, "language": DEFAULT_LANGUAGE, "daily_ping": True}
+                json.dump(user_config_dict, user_config_file)
 
-        with open(userdata_path, "r") as userdata_file:
-            userdata = json.load(userdata_file)
+        with open(user_config_path, "r") as user_config_file:
+            user_config = json.load(user_config_file)
 
-        return userdata
+        return user_config
+
+    @staticmethod
+    def load_user_events(user_id):
+        """Loads the user events entry of the given user.
+        Args:
+            user_id (int): ID of user.
+        Returns:
+            list of 'Event': Events of the user as list.
+        """
+        user_events_dict = DatabaseController._load_user_event_entry(user_id)
+
+        user_events = []
+        for event_id in user_events_dict:
+            event = user_events_dict[event_id]
+            event_object = Event(event['title'], DayEnum(event['day']), event['content'],
+                                 EventType(event['event_type']), event['event_time'], event['ping_times'],
+                                 start_ping_done=event['start_ping_done'])
+            event_object.uuid = event_id
+            user_events.append(event_object)
+
+        return user_events
+
+    @staticmethod
+    def _load_user_event_entry(user_id):
+        """Loads the user events entry of the given user and returns it as dict.
+        Args:
+            user_id (int): ID of user.
+        Returns:
+            dict: Events of the user as dict.
+        """
+        user_id_string = str(user_id)
+        user_events_path = os.path.join(DatabaseController.userdata_path, "{}_events.json".format(user_id_string))
+
+        if not os.path.isfile(user_events_path):
+            with open(user_events_path, "w") as user_events_file:
+                user_events_dict = {}
+                json.dump(user_events_dict, user_events_file)
+
+        with open(user_events_path, "r") as user_events_file:
+            user_events_dict = json.load(user_events_file)
+
+        return user_events_dict
 
     @staticmethod
     def load_selected_language(user_id):
@@ -79,7 +120,7 @@ class DatabaseController:
             str: Code of the language.
         """
         user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
+        userdata_path = os.path.join(DatabaseController.userdata_path, "{}_config.json".format(user_id_string))
 
         with open(userdata_path, "r") as userdata_file:
             userdata = json.load(userdata_file)
@@ -87,24 +128,39 @@ class DatabaseController:
         return userdata["language"]
 
     @staticmethod
-    def save_day_event_data(user_id, day, event):
+    def save_event_data_user(user_id, event):
         """Saves the event data of a given day of a given user into the database
         Args:
             user_id (int): ID of user.
-            day (int): Day of the event.
             event (Event): Event that should be saved.
         """
-        day = "{}".format(day)
-        userdata = DatabaseController.load_user_entry(user_id)
+        user_event_data = DatabaseController._load_user_event_entry(user_id)
+        if not event.uuid:
+            user_event_data_id = uuid.uuid4().hex
+            while user_event_data_id in user_event_data:
+                user_event_data_id = uuid.uuid4().hex
+            event.uuid = user_event_data_id
 
-        userdata["events"][day] += [{"title": event.name, "content": event.content,
-                                     "event_type": event.event_type.value, "event_time": event.event_time,
-                                     "ping_times": event.ping_times}]
-        user_id_string = "{}".format(user_id)
-        userdata_path = os.path.join(DatabaseController.userdata_path, "{}.json".format(user_id_string))
+        user_event_data[event.uuid] = {"title": event.name, "day": event.day.value, "content": event.content,
+                                       "event_type": event.event_type.value, "event_time": event.event_time,
+                                       "ping_times": event.ping_times, "in_daily_ping": event.in_daily_ping,
+                                       "start_ping_done": event.start_ping_done,
+                                       "ping_times_to_refresh": event.ping_times_to_refresh}
 
-        with open(userdata_path, "w") as userdata_file:
-            json.dump(userdata, userdata_file)
+        DatabaseController._save_event_data_user(user_id, user_event_data)
+
+    @staticmethod
+    def _save_event_data_user(user_id, user_event_data):
+        """Saves the event data of user.
+        Args:
+            user_id (int): ID of user.
+            user_event_data (dict): Event data of the user.
+        """
+        user_id_string = str(user_id)
+        user_event_data_path = os.path.join(DatabaseController.userdata_path, "{}_events.json".format(user_id_string))
+
+        with open(user_event_data_path, "w") as user_event_data_file:
+            json.dump(user_event_data, user_event_data_file)
 
     @staticmethod
     def read_event_of_user(user_id, day, name):
@@ -117,7 +173,7 @@ class DatabaseController:
             dict: Contains all data of the event.
         """
         day = "{}".format(day)
-        event_data = DatabaseController.read_event_data_of_user(user_id)
+        event_data = DatabaseController.load_user_events(user_id)
         for event in event_data[day]:
             if event['title'] == name:
                 return event
@@ -174,19 +230,17 @@ class DatabaseController:
             json.dump(content, userdata_content)
 
     @staticmethod
-    def load_all_events_from_all_users():
-        """Loads all saved events from all users.
+    def load_all_user_ids():
+        """Loads all users that are stored inside the database.
         Returns:
-            dict: Contains all events of all users.
+            list of 'str': Contains all user ids.
         """
-        userdata_files = glob.glob("{}/*.json".format(DatabaseController.userdata_path))
-        userdata = {}
-        for userdata_file in userdata_files:
-            with open(userdata_file, "r") as userdata_content:
-                content = json.load(userdata_content)
-                userdata["{}".format(content["user_id"])] = content["events"]
+        user_data_config_files = glob.glob("{}/*_config.json".format(DatabaseController.userdata_path))
 
-        return userdata
+        users = [os.path.basename(user_data_config_file).split('_')[0] for user_data_config_file in
+                 user_data_config_files]
+
+        return users
 
     @staticmethod
     def save_all_events_for_user(user_id, event_data):
@@ -220,27 +274,3 @@ class DatabaseController:
         content = DatabaseController._read_user_data(user_id)
         content["daily_ping"] = daily_ping
         DatabaseController._save_user_data(user_id, content)
-
-    @staticmethod
-    def save_changes_on_event(user_id, day, event):
-        """Save changes on a single event of a user.
-        Args:
-            user_id (int): ID of the user.
-            day (int): Integer representation of the day.
-            event (dict): Event dict that should be saved.
-        """
-        user_data = DatabaseController._read_user_data(user_id)
-        day = "{}".format(day)
-        event_data = user_data["events"][day]
-
-        for event_entry in event_data:
-            if event_entry["title"] == event["title"]:
-                event_entry["content"] = event["content"]
-                event_entry["event_type"] = event["event_type"]
-                event_entry["event_time"] = event["event_time"]
-                event_entry["ping_times"] = event["ping_times"]
-                event_entry["start_ping_done"] = event.get("start_ping_done", False)
-                event_entry["ping_times_to_refresh"] = event.get("ping_times_to_refresh", {})
-                break
-
-        DatabaseController._save_user_data(user_id, user_data)

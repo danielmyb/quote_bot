@@ -7,35 +7,36 @@
 # Author: Daniel Bebber <daniel.bebber@gmx.de>
 # ----------------------------------------------
 from control.database_controller import DatabaseController
+from models.day import DayEnum
 from models.event import EventType, Event
 
 
 class User:
 
-    def __init__(self, user):
+    def __init__(self, user_id, telegram_user=None):
         """Constructor.
         Args:
-            user (telegram.User):
+            user_id (int): ID of the user.
+            telegram_user (telegram.User, optional): Telegram user object.
         """
-        self.telegram_user = user
-        self.user_data = DatabaseController.load_user_entry(self.telegram_user.id)
-        self.language = self.user_data["language"]
+        self.telegram_user = telegram_user
+        self.user_id = user_id
+        self.user_config = DatabaseController.load_user_config(self.user_id)
+        self.language = self.user_config["language"]
 
     def retrieve_all_events(self):
-        """
+        """Retrieve all events of the user.
         Returns:
-
+            dict: Contains all events of the user.
         """
         event_list = []
 
-        if not self.user_data["events"]:
-            return None
-
-        for event in self.user_data["events"]:
+        for event in DatabaseController.load_user_events(self.user_id):
             name = event["name"]
+            day = DayEnum(event["day"])
             content = event["content"]
             event_type = EventType(event["event_type"])
             ping_time = event["event_time"]
-            event_list.append(Event(name, content, event_type, ping_time))
+            event_list.append(Event(name, day, content, event_type, ping_time))
 
         return event_list
