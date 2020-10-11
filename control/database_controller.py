@@ -172,7 +172,7 @@ class DatabaseController:
             dict: Contains all data of the event.
         """
         user_events = DatabaseController._load_user_event_entry(user_id)
-        if user_events[event_id]:
+        if event_id in user_events.keys():
             return user_events[event_id]
         return None
 
@@ -184,7 +184,7 @@ class DatabaseController:
             event_id (str): ID of the event.
         """
         event_data = DatabaseController._load_user_event_entry(user_id)
-        if event_data[event_id]:
+        if event_id in event_data:
             event_data.pop(event_id)
             DatabaseController._save_event_data_user(user_id, event_data)
 
