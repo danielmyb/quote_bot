@@ -183,6 +183,10 @@
     "DE": "Der Termin wurde nicht gelöscht.",
     "EN": "The event was not deleted."
   },
+  "event_daily_ping_header": {
+    "DE": "Du hast heute folgende Termine:",
+    "EN": "Today you got the following events:"
+  },
   "day_monday": {
     "DE": "Montag",
     "EN": "Monday"
