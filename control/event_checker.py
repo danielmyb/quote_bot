@@ -44,13 +44,36 @@ class EventChecker:
         if today != current_day:
             # Use fresh userdata
             user_ids = DatabaseController.load_all_user_ids()
-            self._ping_users(user_ids, current_day)
+            self._daily_ping_users(user_ids, current_day)
 
         # Refresh pings of all events of yesterday
         user_ids = DatabaseController.load_all_user_ids()
         self._refresh_start_pings(user_ids, (datetime.today() - timedelta(days=1)).weekday())
 
         self.check_events()
+
+    def _daily_ping_users(self, user_ids, day):
+        """Pings all users inside the user id list with all of their events of the given day.
+        Args:
+            user_ids (list of 'str'): Contains all users.
+            day (int): Represents the day which should be pinged for.
+        """
+        bot = BotControl.get_bot()
+
+        for user_id in user_ids:
+            user_events = DatabaseController.load_user_events(user_id)
+            language = DatabaseController.load_selected_language(user_id)
+            events_of_today = [event for event in user_events if event.day.value == day and event.in_daily_ping]
+            message = ""
+            if events_of_today:
+                message += "*{}*\n\n".format(receive_translation("event_daily_ping_header", language))
+            for event in events_of_today:
+                message_event = self.build_ping_message(user_id, event)
+                postfix = "_{}".format(event.uuid)
+                bot.send_message(user_id, text=message + message_event, parse_mode=ParseMode.MARKDOWN_V2,
+                                 reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
+                # Clear so that the header is only printed once
+                message = ""
 
     def _ping_users(self, user_ids, day):
         """Pings all users inside userdata with the events of the given day
@@ -92,7 +115,6 @@ class EventChecker:
                     bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2)
                 else:
                     language = DatabaseController.load_selected_language(user_id)
-                    weekday = datetime.now().weekday() if today else (datetime.now() + timedelta(days=1)).weekday()
                     postfix = "_{}".format(event.uuid)
                     bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
                                      reply_markup=Event.event_keyboard_alteration(language, "event", postfix))
