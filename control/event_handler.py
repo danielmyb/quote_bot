@@ -372,7 +372,7 @@ class EventHandler:
                 event_dict = EventHandler.events_in_alteration[user_id]["new"]
                 event = Event(event_dict['title'], DayEnum(int(event_dict['day'])), event_dict['content'],
                               EventType(int(event_dict['event_type'])), event_dict['event_time'],
-                              event_dict['ping_times'])
+                              event_dict['ping_times'], start_ping_done=event_dict['start_ping_done'])
                 event.uuid = event_id
                 DatabaseController.save_event_data_user(user_id, event)
                 query.edit_message_text(text=receive_translation("event_alteration_change_done", user_language))
