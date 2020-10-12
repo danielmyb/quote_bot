@@ -271,7 +271,7 @@ class Event:
                 ping_time_delta = timedelta(hours=int(ping_time.split(":")[0]), minutes=int(ping_time.split(":")[1]))
                 ping_time_real = start_time - ping_time_delta
                 ping_times_enabled += "{}:{} \\- \\({} {}\\)\n".format(
-                    ping_time_real.hour, ping_time_real.minute, ping_time,
+                    "0{}".format(ping_time_real.hour)[-2:], "0{}".format(ping_time_real.minute)[-2:], ping_time,
                     receive_translation("event_before", user_language))
         if ping_times_enabled:
             message += "*{}:*\n{}".format(receive_translation("event_pingtime", user_language), ping_times_enabled)
