@@ -241,8 +241,16 @@ class EventHandler:
 
         event_id = query.data.split('_')[2]
 
+        # Handle silencing of events
+        if query.data.startswith("event_silence"):
+            event = [event for event in DatabaseController.load_user_events(user_id) if event.uuid == event_id][0]
+            event.ping_times = DEFAULT_PING_STATES.copy()
+            DatabaseController.save_event_data_user(user_id, event)
+            query.edit_message_text(text=receive_translation("event_silenced", user_language))
+            UserEventAlterationMachine.set_state_of_user(user_id, 0)
+
         # Handle change of events
-        if query.data.startswith("event_change"):
+        elif query.data.startswith("event_change"):
 
             # State: Choice - Check which button the user clicked after change was started.
             if UserEventAlterationMachine.receive_state_of_user(user_id) == 99:

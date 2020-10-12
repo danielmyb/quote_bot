@@ -139,6 +139,8 @@ class Event:
         """Generates the keyboard for event alteration.
         Args:
             user_language (str): Language that should be used.
+            callback_prefix (str): Prefix used for callback data.
+            callback_postfix (str): Postfix used for callback data.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
@@ -150,6 +152,10 @@ class Event:
                                      callback_data="{}_delete{}".format(callback_prefix, callback_postfix))
             ]
         ]
+        if callback_postfix:
+            keyboard[0].append(
+                InlineKeyboardButton(receive_translation("event_alteration_silence", user_language),
+                                     callback_data="{}_silence{}".format(callback_prefix, callback_postfix)))
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
