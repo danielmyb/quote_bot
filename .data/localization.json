@@ -135,6 +135,14 @@
     "DE": "Löschen",
     "EN": "Delete"
   },
+  "event_alteration_silence": {
+    "DE": "Stumm",
+    "EN": "Mute"
+  },
+  "event_silenced": {
+    "DE": "Termin stumm geschaltet",
+    "EN": "Event muted"
+  },
   "event_alteration_change_header": {
     "DE": "Welchen Termin möchtest du verändern?",
     "EN": "Which event you would like to change?"
