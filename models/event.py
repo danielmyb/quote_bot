@@ -273,7 +273,7 @@ class Event:
         start_time = datetime(current_time.year, current_time.month, current_time.day, self.event_time_hours,
                               self.event_time_minutes)
         for ping_time in self.ping_times:
-            if self.ping_times[ping_time]:
+            if self.ping_times[ping_time] or ping_time in self.ping_times_to_refresh.keys():
                 ping_time_delta = timedelta(hours=int(ping_time.split(":")[0]), minutes=int(ping_time.split(":")[1]))
                 ping_time_real = start_time - ping_time_delta
                 ping_times_enabled += "{}:{} \\- \\({} {}\\)\n".format(
