@@ -24,6 +24,14 @@ class User:
         self.user_config = DatabaseController.load_user_config(self.user_id)
         self.language = self.user_config["language"]
 
+    @staticmethod
+    def resolve_user(update):
+        if update.message.chat['type'] == "group":
+            user = User(update.message.chat.id, update.message.from_user)
+        else:
+            user = User(update.message.from_user.id, update.message.from_user)
+        return user
+
     def retrieve_all_events(self):
         """Retrieve all events of the user.
         Returns:
