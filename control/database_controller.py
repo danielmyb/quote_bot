@@ -85,6 +85,8 @@ class DatabaseController:
             event_object = Event(event['title'], DayEnum(event['day']), event['content'],
                                  EventType(event['event_type']), event['event_time'], event['ping_times'],
                                  start_ping_done=event['start_ping_done'])
+            if "ping_times_to_refresh" in event.keys():
+                event_object.ping_times_to_refresh = event['ping_times_to_refresh']
             event_object.uuid = event_id
             user_events.append(event_object)
 
