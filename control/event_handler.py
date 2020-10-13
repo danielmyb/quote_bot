@@ -37,32 +37,32 @@ class EventHandler:
         """Reply to the /new_event command. Created the event in creation entry for the requesting user and starts the
         event creation cycle.
         """
-        user = User(update.message.from_user.id, update.message.from_user)
-        UserEventCreationMachine.set_state_of_user(user.telegram_user.id, 1)
-        EventHandler.events_in_creation[user.telegram_user.id] = {}
+        user = User.resolve_user(update)
+        UserEventCreationMachine.set_state_of_user(user.user_id, 1)
+        EventHandler.events_in_creation[user.user_id] = {}
         update.message.reply_text(receive_translation("event_creation_start", user.language)
                                   .format(USERNAME=user.telegram_user.first_name))
 
     @staticmethod
     def add_new_event_title(update, context):
         """Handles the title of the new event."""
-        user_id = update.message.from_user.id
-        user_language = DatabaseController.load_selected_language(user_id)
-        if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
+        if UserEventCreationMachine.receive_state_of_user(user.user_id) != 1:
             return
         title = replace_reserved_characters(update.message.text)
-        EventHandler.events_in_creation[user_id]["title"] = title
+        EventHandler.events_in_creation[user.user_id]["title"] = title
         update.message.reply_text(receive_translation("event_creation_content", user_language))
 
     @staticmethod
     def add_new_event_content(update, context):
         """Handles the addition of content of a new event."""
-        user_id = update.message.from_user.id
-        user_language = DatabaseController.load_selected_language(user_id)
-        if UserEventCreationMachine.receive_state_of_user(user_id) != 1:
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
+        if UserEventCreationMachine.receive_state_of_user(user.user_id) != 1:
             return
         content = replace_reserved_characters(update.message.text)
-        EventHandler.events_in_creation[user_id]["content"] = content
+        EventHandler.events_in_creation[user.user_id]["content"] = content
         update.message.reply_text(receive_translation("event_creation_type", user_language),
                                   reply_markup=Event.event_keyboard_type(user_language))
 
@@ -72,7 +72,11 @@ class EventHandler:
         query = update.callback_query
         query.answer()
 
-        user_id = query.from_user['id']
+        logging.info(query)
+        if query.message.chat['type'] == "group":
+            user_id = query.message.chat['id']
+        else:
+            user_id = query.from_user['id']
         user_language = DatabaseController.load_selected_language(user_id)
 
         bot = BotControl.get_bot()
@@ -179,10 +183,10 @@ class EventHandler:
     @staticmethod
     def list_all_events_of_user(update, context):
         """Lists all events of the user."""
-        user = User(update.message.from_user.id, update.message.from_user)
+        user = User.resolve_user(update)
 
         message = "*{}:*\n\n".format(receive_translation("event_list_header", user.language))
-        event_data = DatabaseController.load_user_events(user.telegram_user.id)
+        event_data = DatabaseController.load_user_events(user.user_id)
         has_content = False
 
         for day in DayEnum:
@@ -201,7 +205,7 @@ class EventHandler:
         if not has_content:
             message += "{}".format(receive_translation("no_events", user.language))
         bot = BotControl.get_bot()
-        bot.send_message(user.telegram_user.id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
+        bot.send_message(user.user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
                          reply_markup=Event.event_keyboard_alteration(user.language))
 
     @staticmethod
