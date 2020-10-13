@@ -164,10 +164,9 @@ class EventChecker:
             if event.event_type == EventType.SINGLE:
                 DatabaseController.delete_event_of_user(user_id, event.uuid)
                 event_deleted = True
-            else:
-                event.start_ping_done = True
+            event.start_ping_done = True
 
-        if needs_ping:
+        if needs_ping and not event_deleted:
             # Save the changes on the event
             DatabaseController.save_event_data_user(user_id, event)
 
