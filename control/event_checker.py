@@ -33,24 +33,23 @@ class EventChecker:
 
     def check_events(self):
         """Checks the events of all user regularly and pings them."""
-        user_ids = DatabaseController.load_all_user_ids()
-        today = datetime.today().weekday()
-        self._ping_users(user_ids, today)
-
-        time.sleep(self.interval)
-
-        # Check if a new day has begun
-        current_day = datetime.today().weekday()
-        if today != current_day:
-            # Use fresh userdata
+        while True:
             user_ids = DatabaseController.load_all_user_ids()
-            self._daily_ping_users(user_ids, current_day)
+            today = datetime.today().weekday()
+            self._ping_users(user_ids, today)
 
-        # Refresh pings of all events of yesterday
-        user_ids = DatabaseController.load_all_user_ids()
-        self._refresh_start_pings(user_ids, (datetime.today() - timedelta(days=1)).weekday())
+            time.sleep(self.interval)
 
-        self.check_events()
+            # Check if a new day has begun
+            current_day = datetime.today().weekday()
+            if today != current_day:
+                # Use fresh userdata
+                user_ids = DatabaseController.load_all_user_ids()
+                self._daily_ping_users(user_ids, current_day)
+
+            # Refresh pings of all events of yesterday
+            user_ids = DatabaseController.load_all_user_ids()
+            self._refresh_start_pings(user_ids, (datetime.today() - timedelta(days=1)).weekday())
 
     def _daily_ping_users(self, user_ids, day):
         """Pings all users inside the user id list with all of their events of the given day.
