@@ -72,7 +72,6 @@ class EventHandler:
         query = update.callback_query
         query.answer()
 
-        logging.info(query)
         if query.message.chat['type'] == "group":
             user_id = query.message.chat['id']
         else:

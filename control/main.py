@@ -32,7 +32,6 @@ db_controller = DatabaseController()
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
-    logger.info(update.message.chat)
     user = User.resolve_user(update)
     update.message.reply_text(
         receive_translation("greeting", user.language).format(USERNAME=user.telegram_user.first_name))
