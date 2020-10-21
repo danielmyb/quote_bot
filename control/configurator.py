@@ -12,6 +12,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from control.bot_control import BotControl
 from control.database_controller import DatabaseController
+from models.user import User
 from utils.localization_manager import receive_translation, receive_languages
 
 CONFIG_LANGUAGE = "config_start_language"
@@ -24,8 +25,8 @@ class Configurator:
     @staticmethod
     def start_configuration_dialog(update, context):
         """Starts the configuration dialog."""
-        user_id = update.message.from_user.id
-        user_language = DatabaseController.load_selected_language(user_id)
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
         Configurator.config_options_keyboard(user_language)
 
         update.message.reply_text(receive_translation("config_dialog_started", user_language),

@@ -14,8 +14,8 @@ A core functionality of this bot is the reminder that ensures that you will neve
 - [x] Personal configurations
 - [ ] Configurable ping times for events
 - [x] Listing of all created events
-- [ ] Basis testing infrastructure
-- [ ] Group chat and group events support
+- [x] Basis testing infrastructure
+- [x] Group chat and group events support
 ---
 
 #### Deutsch
@@ -29,5 +29,5 @@ Eine der Hauptfunktionalitäten ist es, dass der Bot Erinnerungen verschickt dam
 - [x] Personalisierte Konfigurationen
 - [ ] Benutzerdefinierte Erinnerungszeiten für Termine
 - [x] Auflistung aller erstellten Termine
-- [ ] Grundelegende Testinfrastruktur
-- [ ] Unterstüzung von Gruppenchats und Gruppenterminen
+- [x] Grundelegende Testinfrastruktur
+- [x] Unterstüzung von Gruppenchats und Gruppenterminen

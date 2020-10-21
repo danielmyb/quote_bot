@@ -25,12 +25,27 @@ class User:
         self.language = self.user_config["language"]
 
     @staticmethod
-    def resolve_user(update):
+    def resolve_user(update, user_id=None):
+        """Resolves the user from the given update object.
+        Args:
+            update (telegram.Update): Update object.
+            user_id (int): Needed in case of group queries. From user is then the ID of the bot and thus
+                a ID has to be given.
+
+        Returns:
+            user: User object.
+        """
         if update.message.chat['type'] == "group":
             user = User(update.message.chat.id, update.message.from_user)
+        elif user_id:
+            user = User(update.message.chat.id, user_id)
         else:
             user = User(update.message.from_user.id, update.message.from_user)
         return user
+
+    def is_group(self):
+        """Determines whether the user object is representing a single user or a group."""
+        return self.user_id < 0
 
     def retrieve_all_events(self):
         """Retrieve all events of the user.

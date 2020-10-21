@@ -214,10 +214,9 @@ class EventHandler:
         query.answer()
 
         altering_type = query.data.split("_")[-1:][0]
-
-        user_id = query.from_user['id']
-        events = DatabaseController.load_user_events(user_id)
-        user_language = DatabaseController.load_selected_language(user_id)
+        user = User.resolve_user(query, user_id=query.from_user['id'])
+        events = DatabaseController.load_user_events(user.user_id)
+        user_language = DatabaseController.load_selected_language(user.user_id)
 
         message = None
         if altering_type == 'change':
@@ -226,9 +225,9 @@ class EventHandler:
             message = receive_translation("event_alteration_delete_header", user_language)
 
         if UserEventAlterationMachine.receive_state_of_user(
-                user_id) == 0 or UserEventAlterationMachine.receive_state_of_user(user_id) == -1:
+                user.user_id) == 0 or UserEventAlterationMachine.receive_state_of_user(user.user_id) == -1:
             bot = BotControl.get_bot()
-            bot.send_message(user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
+            bot.send_message(user.user_id, text=message, parse_mode=ParseMode.MARKDOWN_V2,
                              reply_markup=Event.event_keyboard_alteration_action(events, user_language,
                                                                                  mode=altering_type))
 
@@ -238,15 +237,15 @@ class EventHandler:
         query = update.callback_query
         query.answer()
 
-        user_id = query.from_user['id']
-        user_language = DatabaseController.load_selected_language(user_id)
-        logging.info("data: %s | state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user_id))
+        user = User.resolve_user(query, user_id=query.from_user['id'])
+        user_language = DatabaseController.load_selected_language(user.user_id)
+        logging.info("data: %s | state: %s", query.data, UserEventAlterationMachine.receive_state_of_user(user.user_id))
 
         event_id = query.data.split('_')[2]
 
         # Handle silencing of events
         if query.data.startswith("event_silence"):
-            event = [event for event in DatabaseController.load_user_events(user_id) if event.uuid == event_id][0]
+            event = [event for event in DatabaseController.load_user_events(user.user_id) if event.uuid == event_id][0]
 
             # For regularly events the ping times have to be marked as to be refreshed
             if event.event_type == EventType.REGULARLY:
@@ -255,157 +254,158 @@ class EventHandler:
                         event.ping_times_to_refresh[ping_time] = True
 
             event.ping_times = DEFAULT_PING_STATES.copy()
-            DatabaseController.save_event_data_user(user_id, event)
+            DatabaseController.save_event_data_user(user.user_id, event)
             query.edit_message_text(text=receive_translation("event_silenced", user_language))
-            UserEventAlterationMachine.set_state_of_user(user_id, 0)
+            UserEventAlterationMachine.set_state_of_user(user.user_id, 0)
 
         # Handle change of events
         elif query.data.startswith("event_change"):
 
             # State: Choice - Check which button the user clicked after change was started.
-            if UserEventAlterationMachine.receive_state_of_user(user_id) == 99:
+            if UserEventAlterationMachine.receive_state_of_user(user.user_id) == 99:
                 choice = query.data.split('_')[-1]
                 if choice == "name":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 1)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 1)
                 elif choice == "content":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 2)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 2)
                 elif choice == "type":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 3)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 3)
                 elif choice == "start":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 4)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 4)
                 elif choice == "pingtimes":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 5)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 5)
                 elif choice == "day":
-                    UserEventAlterationMachine.set_state_of_user(user_id, 6)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 6)
                 elif choice == "done":
-                    UserEventAlterationMachine.set_state_of_user(user_id, -1)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, -1)
 
             # State: Initial - return options to the user.
-            if UserEventAlterationMachine.receive_state_of_user(user_id) == 0:
-                EventHandler.events_in_alteration[user_id] = {}
-                EventHandler.events_in_alteration[user_id]['old'] = \
-                    DatabaseController.read_event_of_user(user_id, event_id)
-                EventHandler.events_in_alteration[user_id]['old']['id'] = event_id
-                EventHandler.events_in_alteration[user_id]['new'] = \
-                    EventHandler.events_in_alteration[user_id]['old'].copy()
+            if UserEventAlterationMachine.receive_state_of_user(user.user_id) == 0:
+                EventHandler.events_in_alteration[user.user_id] = {}
+                EventHandler.events_in_alteration[user.user_id]['old'] = \
+                    DatabaseController.read_event_of_user(user.user_id, event_id)
+                EventHandler.events_in_alteration[user.user_id]['old']['id'] = event_id
+                EventHandler.events_in_alteration[user.user_id]['new'] = \
+                    EventHandler.events_in_alteration[user.user_id]['old'].copy()
 
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(user_language,
                                                                                                   query.data))
-                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
 
             # State: Name - Change name of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 1:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 1:
                 query.edit_message_text(text=receive_translation("event_alteration_change_name", user_language))
-                UserEventAlterationMachine.set_state_of_user(user_id, 11)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 11)
 
             # State: Content - Change content of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 2:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 2:
                 query.edit_message_text(text=receive_translation("event_alteration_change_content", user_language))
-                UserEventAlterationMachine.set_state_of_user(user_id, 12)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 12)
 
             # State: Type - Change type of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 3:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 3:
                 query.edit_message_text(text=receive_translation("event_alteration_change_type", user_language),
                                         reply_markup=Event.event_keyboard_type(user_language, callback_prefix=
                                         "event_change_{}_type_".format(event_id)))
-                UserEventAlterationMachine.set_state_of_user(user_id, 13)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 13)
 
             # State: Start time - Change start time of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 4:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 4:
                 query.edit_message_text(text=receive_translation("event_alteration_change_hours", user_language),
                                         reply_markup=Event.event_keyboard_hours(
                                             callback_prefix="event_change_{}_hours_".format(event_id)))
-                UserEventAlterationMachine.set_state_of_user(user_id, 41)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 41)
 
             # State: Ping times - Change ping times of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 5:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 5:
                 query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
                                         reply_markup=Event.event_keyboard_ping_times(
                                             user_language, callback_prefix="event_change_{}".format(event_id),
-                                            states=EventHandler.events_in_alteration[user_id]["old"]["ping_times"]))
-                UserEventAlterationMachine.set_state_of_user(user_id, 51)
+                                            states=EventHandler.events_in_alteration[user.user_id]["old"]["ping_times"]))
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 51)
 
             # State: Day - Change day of event.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 6:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 6:
                 query.edit_message_text(text=receive_translation("event_creation_day", user_language),
                                         reply_markup=Event.event_keyboard_day(
                                             user_language, callback_prefix="event_change_{}_".format(event_id)))
-                UserEventAlterationMachine.set_state_of_user(user_id, 16)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 16)
 
             # State: Alter event type
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 13:
-                EventHandler.events_in_alteration[user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
-                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 13:
+                EventHandler.events_in_alteration[user.user_id]['new']['event_type'] = int(query.data.split('_')[-1][0])
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(
                                             user_language, "event_change_{}".format(event_id)))
 
             # State: Alter event day
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 16:
-                EventHandler.events_in_alteration[user_id]['new']['day'] = int(query.data.split('_')[-1][1])
-                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 16:
+                EventHandler.events_in_alteration[user.user_id]['new']['day'] = int(query.data.split('_')[-1][1])
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(
                                             user_language, "event_change_{}".format(event_id)))
 
             # State: Alter event hours
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 41:
-                EventHandler.events_in_alteration[user_id]['new']['event_time'] = \
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 41:
+                EventHandler.events_in_alteration[user.user_id]['new']['event_time'] = \
                     "{}:{}".format(query.data.split('_')[-1][1:],
-                                   EventHandler.events_in_alteration[user_id]['new']['event_time'].split(':')[1])
-                UserEventAlterationMachine.set_state_of_user(user_id, 42)
+                                   EventHandler.events_in_alteration[user.user_id]['new']['event_time'].split(':')[1])
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 42)
                 query.edit_message_text(text=receive_translation("event_alteration_change_minutes", user_language),
                                         reply_markup=Event.event_keyboard_minutes(
                                             callback_prefix="event_change_{}_minutes_".format(event_id)))
 
             # State: Alter event minutes
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 42:
-                EventHandler.events_in_alteration[user_id]['new']['event_time'] = \
-                    "{}:{}".format(EventHandler.events_in_alteration[user_id]['new']['event_time'].split(':')[0],
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 42:
+                EventHandler.events_in_alteration[user.user_id]['new']['event_time'] = \
+                    "{}:{}".format(EventHandler.events_in_alteration[user.user_id]['new']['event_time'].split(':')[0],
                                    query.data.split('_')[-1][1:])
-                UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
                 query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                         reply_markup=Event.event_keyboard_alteration_change_start(
                                             user_language, "event_change_{}".format(event_id)))
 
             # State: Alter ping times - trigger chance on ping time
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 51:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 51:
                 toggle_data = query.data.split('_')[-1]
                 if toggle_data == 'done':
-                    UserEventAlterationMachine.set_state_of_user(user_id, 99)
+                    UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
                     query.edit_message_text(text=receive_translation("event_alteration_change_decision", user_language),
                                             reply_markup=Event.event_keyboard_alteration_change_start(
                                                 user_language, "event_change_{}".format(event_id)))
                 else:
-                    EventHandler.events_in_alteration[user_id]["new"]["ping_times"][toggle_data] = \
-                        not EventHandler.events_in_alteration[user_id]["new"]["ping_times"][toggle_data]
+                    EventHandler.events_in_alteration[user.user_id]["new"]["ping_times"][toggle_data] = \
+                        not EventHandler.events_in_alteration[user.user_id]["new"]["ping_times"][toggle_data]
                     query.edit_message_text(text=receive_translation("event_creation_ping_times_header", user_language),
                                             reply_markup=Event.event_keyboard_ping_times(
                                                 user_language, callback_prefix="event_change_{}".format(event_id),
-                                                states=EventHandler.events_in_alteration[user_id]["new"]["ping_times"]))
+                                                states=EventHandler.events_in_alteration[
+                                                    user.user_id]["new"]["ping_times"]))
 
             # State: Done - Save changes and delete temporary object.
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == -1:
-                event_dict = EventHandler.events_in_alteration[user_id]["new"]
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == -1:
+                event_dict = EventHandler.events_in_alteration[user.user_id]["new"]
                 event = Event(event_dict['title'], DayEnum(int(event_dict['day'])), event_dict['content'],
                               EventType(int(event_dict['event_type'])), event_dict['event_time'],
                               event_dict['ping_times'], start_ping_done=event_dict['start_ping_done'])
                 event.uuid = event_id
-                DatabaseController.save_event_data_user(user_id, event)
+                DatabaseController.save_event_data_user(user.user_id, event)
                 query.edit_message_text(text=receive_translation("event_alteration_change_done", user_language))
-                EventHandler.events_in_alteration.pop(user_id)
-                UserEventAlterationMachine.set_state_of_user(user_id, 0)
+                EventHandler.events_in_alteration.pop(user.user_id)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 0)
 
         elif query.data.startswith("event_delete"):
 
             # State: Initial - request confirmation from user
-            if UserEventAlterationMachine.receive_state_of_user(user_id) == 0:
+            if UserEventAlterationMachine.receive_state_of_user(user.user_id) == 0:
 
                 message = receive_translation("event_alteration_delete_request_confirmation", user_language)
                 message += "\n"
 
-                event_data = DatabaseController.read_event_of_user(user_id, event_id)
+                event_data = DatabaseController.read_event_of_user(user.user_id, event_id)
                 event = Event(event_data['title'], DayEnum(event_data['day']), event_data['content'],
                               EventType(event_data['event_type']), event_data['event_time'])
 
@@ -414,37 +414,37 @@ class EventHandler:
                 query.edit_message_text(text=message, reply_markup=Event.event_keyboard_confirmation(
                     user_language, "event_delete_{}".format(event_id)), parse_mode=ParseMode.MARKDOWN_V2)
 
-                UserEventAlterationMachine.set_state_of_user(user_id, 101)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 101)
 
-            elif UserEventAlterationMachine.receive_state_of_user(user_id) == 101:
+            elif UserEventAlterationMachine.receive_state_of_user(user.user_id) == 101:
 
                 if query.data.split('_')[-1] == 'yes':
-                    DatabaseController.delete_event_of_user(user_id, event_id)
+                    DatabaseController.delete_event_of_user(user.user_id, event_id)
                     query.edit_message_text(text=receive_translation("event_alteration_delete_confirmed",
                                                                      user_language))
                 elif query.data.split('_')[-1] == 'no':
                     query.edit_message_text(text=receive_translation("event_alteration_delete_aborted", user_language))
 
-                UserEventAlterationMachine.set_state_of_user(user_id, 0)
+                UserEventAlterationMachine.set_state_of_user(user.user_id, 0)
 
     @staticmethod
     def event_alteration_handle_reply(update, context):
         """Handles the replies of the event alteration."""
-        user_id = update.message.from_user.id
-        user_language = DatabaseController.load_selected_language(user_id)
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
 
-        state = UserEventAlterationMachine.receive_state_of_user(user_id)
+        state = UserEventAlterationMachine.receive_state_of_user(user.user_id)
 
         bot = BotControl.get_bot()
-        logging.info(EventHandler.events_in_alteration[user_id]['old'])
-        event_suffix = "{}".format(EventHandler.events_in_alteration[user_id]['old']['id'])
+        logging.info(EventHandler.events_in_alteration[user.user_id]['old'])
+        event_suffix = "{}".format(EventHandler.events_in_alteration[user.user_id]['old']['id'])
 
         # State: Alter name
         if state == 11:
             title = replace_reserved_characters(update.message.text)
-            EventHandler.events_in_alteration[user_id]['new']['title'] = title
-            UserEventAlterationMachine.set_state_of_user(user_id, 99)
-            bot.send_message(user_id, text=receive_translation("event_alteration_change_decision", user_language),
+            EventHandler.events_in_alteration[user.user_id]['new']['title'] = title
+            UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
+            bot.send_message(user.user_id, text=receive_translation("event_alteration_change_decision", user_language),
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
                                                                                        "event_change_{}".format(
                                                                                            event_suffix)))
@@ -452,9 +452,9 @@ class EventHandler:
         # State: Alter content
         elif state == 12:
             content = replace_reserved_characters(update.message.text)
-            EventHandler.events_in_alteration[user_id]['new']['content'] = content
-            UserEventAlterationMachine.set_state_of_user(user_id, 99)
-            bot.send_message(user_id, text=receive_translation("event_alteration_change_decision", user_language),
+            EventHandler.events_in_alteration[user.user_id]['new']['content'] = content
+            UserEventAlterationMachine.set_state_of_user(user.user_id, 99)
+            bot.send_message(user.user_id, text=receive_translation("event_alteration_change_decision", user_language),
                              reply_markup=Event.event_keyboard_alteration_change_start(user_language,
                                                                                        "event_change_{}".format(
                                                                                            event_suffix)))
