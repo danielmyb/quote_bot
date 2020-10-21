@@ -247,6 +247,13 @@ class EventHandler:
         # Handle silencing of events
         if query.data.startswith("event_silence"):
             event = [event for event in DatabaseController.load_user_events(user_id) if event.uuid == event_id][0]
+
+            # For regularly events the ping times have to be marked as to be refreshed
+            if event.event_type == EventType.REGULARLY:
+                for ping_time in event.ping_times:
+                    if event.ping_times[ping_time]:
+                        event.ping_times_to_refresh[ping_time] = True
+
             event.ping_times = DEFAULT_PING_STATES.copy()
             DatabaseController.save_event_data_user(user_id, event)
             query.edit_message_text(text=receive_translation("event_silenced", user_language))
