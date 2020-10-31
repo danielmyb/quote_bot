@@ -35,12 +35,13 @@ class User:
         Returns:
             user: User object.
         """
-        if update.message.chat['type'] == "group":
-            user = User(update.message.chat.id, update.message.from_user)
+        message = update.message if update.message else update.callback_query.message
+        if message and message.chat['type'] == "group":
+            user = User(message.chat.id, message.from_user)
         elif user_id:
-            user = User(update.message.chat.id, user_id)
+            user = User(message.chat.id, user_id)
         else:
-            user = User(update.message.from_user.id, update.message.from_user)
+            user = User(message.from_user.id, message.from_user)
         return user
 
     def is_group(self):
