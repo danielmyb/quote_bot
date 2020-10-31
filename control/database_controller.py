@@ -12,6 +12,7 @@ import logging
 import os
 import uuid
 
+from control.bot_control import BotControl
 from models.day import DayEnum
 from models.event import Event, EventType
 from utils.localization_manager import DEFAULT_LANGUAGE
@@ -248,3 +249,33 @@ class DatabaseController:
         content = DatabaseController._read_user_data(user_id)
         content["daily_ping"] = daily_ping
         DatabaseController._save_user_data(user_id, content)
+
+    @staticmethod
+    def check_access_control(group_id, user_id):
+        """Checks if the access control is active inside the given group and if the user is allowed to configure the
+        bot if yes.
+        Args:
+            group_id (int): ID of the group.
+            user_id (int): ID of the user.
+
+        Returns:
+            bool: Indicates whether the user is allowed to perform actions inside the group or not.
+        """
+
+        group_config = DatabaseController.load_user_config(group_id)
+
+        config_changed = False
+
+        if "access_control_active" not in group_config.keys():
+            group_config["access_control_active"] = False
+            config_changed = True
+        if "access_control_list" not in group_config.keys():
+            bot = BotControl.get_bot()
+            admins = bot.get_chat_administrators(group_id)
+            group_config["access_control_list"] = [x["user"]["id"] for x in admins]
+            config_changed = True
+
+        if config_changed:
+            DatabaseController._save_user_data(group_id, group_config)
+
+        return not group_config["access_control_active"] or user_id in group_config["access_control_list"]

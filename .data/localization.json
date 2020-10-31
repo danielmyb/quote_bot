@@ -254,5 +254,13 @@
   "config_daily_ping_disable": {
     "DE": "Okay - Ich werde dich nicht mehr um 0:00 Uhr über die Termine des Tages benachrichtigen.",
     "EN": "Okay - I will not ping you about the events of the day at midnight."
-  }
+  },
+  "config_start_access_control": {
+    "DE": "Benutzerrechte",
+    "EN": "User rights"
+  },
+  "config_access_control_switch_mode": {
+    "DE": "Sollen nur noch Gruppenadministratoren Änderungen durchführen dürfen?",
+    "EN": "Should only admins be allowed to perform changes?"
+}
 }

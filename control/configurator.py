@@ -17,6 +17,7 @@ from utils.localization_manager import receive_translation, receive_languages
 
 CONFIG_LANGUAGE = "config_start_language"
 CONFIG_DAILY_PING = "config_start_daily_ping"
+CONFIG_ACCESS_CONTROL = "config_start_access_control"
 
 
 class Configurator:
@@ -27,10 +28,9 @@ class Configurator:
         """Starts the configuration dialog."""
         user = User.resolve_user(update)
         user_language = DatabaseController.load_selected_language(user.user_id)
-        Configurator.config_options_keyboard(user_language)
 
         update.message.reply_text(receive_translation("config_dialog_started", user_language),
-                                  reply_markup=Configurator.config_options_keyboard(user_language))
+                                  reply_markup=Configurator.config_options_keyboard(user_language, user.is_group()))
 
     @staticmethod
     def handle_configuration_dialog(update, context):
@@ -38,10 +38,11 @@ class Configurator:
         query = update.callback_query
         query.answer()
 
-        user_id = query.from_user['id']
-        user_language = DatabaseController.load_selected_language(user_id)
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
 
-        bot = BotControl.get_bot()
+        if user.is_group() and not DatabaseController.check_access_control(user.user_id, user.telegram_user.id):
+            return
 
         if query.data == CONFIG_LANGUAGE:
             query.edit_message_text(text=receive_translation("config_language_which", user_language),
@@ -49,6 +50,10 @@ class Configurator:
         elif query.data == CONFIG_DAILY_PING:
             query.edit_message_text(text=receive_translation("config_daily_ping_decide", user_language),
                                     reply_markup=Configurator.config_daily_ping_keyboard(user_language))
+
+        elif query.data == CONFIG_ACCESS_CONTROL:
+            query.edit_message_text(text=receive_translation("config_access_control_switch_mode", user_language),
+                                    reply_markup=Configurator.config_access_control_keyboard(user_language))
 
     @staticmethod
     def handle_configuration_change(update, context):
@@ -60,6 +65,8 @@ class Configurator:
             Configurator.handle_configuration_language_change(update, context)
         elif "daily_ping" in query.data:
             Configurator.handle_configuration_daily_ping_change(update, context)
+        elif "access_control" in query.data:
+            Configurator.handle_configuration_access_control_change(update, context)
 
     @staticmethod
     def handle_configuration_language_change(update, context):
@@ -67,10 +74,10 @@ class Configurator:
         query = update.callback_query
         query.answer()
 
-        user_id = query.from_user['id']
+        user = User.resolve_user(update)
 
         selected_language = query.data.split("_")[-1:][0]
-        DatabaseController.save_user_language(user_id, selected_language)
+        DatabaseController.save_user_language(user.user_id, selected_language)
 
         query.edit_message_text(receive_translation("config_language_changed", selected_language))
 
@@ -80,8 +87,8 @@ class Configurator:
         query = update.callback_query
         query.answer()
 
-        user_id = query.from_user['id']
-        user_language = DatabaseController.load_selected_language(user_id)
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
 
         selected_daily_ping = query.data.split("_")[-1:][0]
 
@@ -91,14 +98,24 @@ class Configurator:
         else:
             config_value = False
             answer = receive_translation("config_daily_ping_disable", user_language)
-        DatabaseController.save_daily_ping(user_id, config_value)
+        DatabaseController.save_daily_ping(user.user_id, config_value)
         query.edit_message_text(answer)
 
     @staticmethod
-    def config_options_keyboard(user_language):
+    def handle_configuration_access_control_change(update, context):
+        """Handles the change of access control."""
+        query = update.callback_query
+        query.answer()
+
+        user = User.resolve_user(update)
+        user_language = DatabaseController.load_selected_language(user.user_id)
+
+    @staticmethod
+    def config_options_keyboard(user_language, is_group=False):
         """Generates the keyboard for all available configuration options.
         Args:
             user_language (str): Language that is used to communicate with the user.
+            is_group (bool, optional): Indicates whether the user is a group or a single client.
         Returns:
             InlineKeyboardMarkup: Generated keyboard.
         """
@@ -110,6 +127,11 @@ class Configurator:
                                      callback_data=CONFIG_DAILY_PING)
             ]
         ]
+
+        if is_group:
+            keyboard.append([InlineKeyboardButton(receive_translation(CONFIG_ACCESS_CONTROL, user_language),
+                                                  callback_data=CONFIG_ACCESS_CONTROL)])
+
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -144,4 +166,23 @@ class Configurator:
                                      callback_data="config_select_daily_ping_no")
             ]
         ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def config_access_control_keyboard(user_language):
+        """Generates the access control configuration keyboard.
+        Args:
+            user_language (str): Language that is used to communicate with the user.
+        Returns:
+            InlineKeyboardMarkup: Generated keyboard.
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton(receive_translation("yes", user_language),
+                                     callback_data="config_select_access_control_yes"),
+                InlineKeyboardButton(receive_translation("no", user_language),
+                                     callback_data="config_select_access_control_no")
+            ]
+        ]
+
         return InlineKeyboardMarkup(keyboard)

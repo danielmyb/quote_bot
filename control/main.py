@@ -33,6 +33,10 @@ db_controller = DatabaseController()
 def start(update, context):
     """Send a message when the command /start is issued."""
     user = User.resolve_user(update)
+
+    if user.is_group() and not DatabaseController.check_access_control(user.user_id, user.telegram_user.id):
+        return
+
     update.message.reply_text(
         receive_translation("greeting", user.language).format(USERNAME=user.telegram_user.first_name))
 
@@ -40,12 +44,20 @@ def start(update, context):
 def help_command(update, context):
     """Send a message when the command /help is issued."""
     user = User.resolve_user(update)
+
+    if user.is_group() and not DatabaseController.check_access_control(user.user_id, user.telegram_user.id):
+        return
+
     update.message.reply_markdown_v2(receive_translation("help", user.language))
 
 
 def parse_input(update, context):
     """Echo the user message."""
     user = User.resolve_user(update)
+
+    if user.is_group() and not DatabaseController.check_access_control(user.user_id, user.telegram_user.id):
+        return
+
     if UserEventCreationMachine.receive_state_of_user(user.user_id) == 1:
         if user.user_id in EventHandler.events_in_creation.keys() and not EventHandler.events_in_creation[user.user_id]:
             EventHandler.add_new_event_title(update, context)

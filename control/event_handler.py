@@ -213,9 +213,13 @@ class EventHandler:
         query = update.callback_query
         query.answer()
 
-        altering_type = query.data.split("_")[-1:][0]
         user = User.resolve_user(query, user_id=query.from_user['id'])
         events = DatabaseController.load_user_events(user.user_id)
+
+        if user.is_group() and not DatabaseController.check_access_control(user.user_id, user.telegram_user.id):
+            return
+
+        altering_type = query.data.split("_")[-1:][0]
         user_language = DatabaseController.load_selected_language(user.user_id)
 
         message = None
